@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RPi0_Screen</title>
+    <link rel="stylesheet" href="/custom.css">
+</head>
+<body id="body">
+
+</body>
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const myMAC = urlParams.get('mac');
+
+// Create WebSocket connection.
+let socket = null
+
+function init(socket) {socket.send(myMAC);}
+function receive(event) {
+    console.log(event);
+    const data = JSON.parse(event.data);
+
+    let elem = null;
+    try {
+        elem = document.getElementById(data.id);
+    }catch (ReferenceError){
+        elem = null;
+    }
+    if (elem) {
+        elem.innerHTML = data.html;
+    }
+}
+
+function connect() {
+    let host = window.location.hostname+":"+window.location.port.toString();
+
+    socket = new WebSocket("ws://"+host+"/ws");
+    socket.addEventListener("open", (event) => {init(socket);});
+    socket.addEventListener("close", (event) => {connect()});
+    socket.addEventListener("message", (event) => {receive(event);})
+}
+
+connect()
+</script>
+</html>

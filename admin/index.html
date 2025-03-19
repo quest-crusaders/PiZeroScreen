@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin panel</title>
+    <link rel="stylesheet" href="/ui.css">
+</head>
+<body>
+ <ul>
+  <li><a class="active" href="/admin/index.html">Zeitplan</a></li>
+  <li><a href="/admin/screens.html">Bildschirme</a></li>
+  <li><a href="/admin/preview.html">Vorab Ansicht</a></li>
+</ul>
+<script>
+    function filter() {
+        let loc = document.getElementById("loc_filter").value;
+        iframes = document.getElementsByTagName("iframe");
+
+        iframes[0].src="/admin/time_table?loc="+loc;
+        iframes[1].src="/admin/time_table?prefab=true&loc="+loc;
+    }
+</script>
+<div class="centered">
+    <label>Zeige nur für Ort: </label>
+    <input type="text" placeholder="leer lassen für alle Orte." id="loc_filter">
+    <input type="button" value="Filtern" onclick="filter()">
+</div>
+
+<table style="width: 100%;">
+    <tr><th>aktiver Zeitplan:</th><th>bearbeiteter Zeitplan:</th></tr>
+    <tr>
+        <td>
+            <iframe src="/admin/time_table" style="width: 97%;height: 60vh;"></iframe>
+        </td>
+        <td>
+            <iframe src="/admin/time_table?prefab=true" style="width: 97%;height: 60vh;"></iframe>
+        </td>
+    </tr>
+</table>
+<table style="width: 100%">
+    <tr>
+        <td>
+            <div>
+                <form action="/admin/edit_event" method="post">
+                    <table>
+                        <tr>
+                            <td>ID</td>
+                            <td>Event</td>
+                            <td>Beschreibung</td>
+                            <td>Start</td>
+                            <td>Ort</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="id" id="id"></td>
+                            <td><input type="text" name="event" id="event"></td>
+                            <td><input type="text" name="description" id="desc"></td>
+                            <td><input type="text" name="start" id="start"></td>
+                            <td><input type="text" name="location" id="loc"></td>
+                            <td><input type="submit" value="Ändern"></td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div>
+                <form action="/admin/add_event" method="post">
+                    <table>
+                        <tr>
+                            <td>Event</td>
+                            <td>Beschreibung</td>
+                            <td>Start</td>
+                            <td>Ort</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="event"></td>
+                            <td><input type="text" name="description"></td>
+                            <td><input type="text" name="start"></td>
+                            <td><input type="text" name="location"></td>
+                            <td><input type="submit" value="Einfügen"></td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div>
+                <form action="/admin/delete_event" method="post">
+                    <table>
+                        <tr>
+                            <td>ID</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="id"></td>
+                            <td><input type="submit" value="Löschen"></td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+        </td>
+        <td>
+            <div>
+                <form action="/admin/reset_table" method="post">
+                    <input type="submit" value="Änderungen zurücksetzen">
+                </form>
+            </div>
+            <div>
+                <form action="/admin/submit_table" method="post">
+                    <input type="submit" value="Änderungen übernehmen">
+                </form>
+            </div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

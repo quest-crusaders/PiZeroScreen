@@ -1,0 +1,69 @@
+body {
+    background-color: #333;
+    color: white;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #191919;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    margin: 3px;
+}
+
+li a:hover {
+    border-color: #555;
+    border-style: solid;
+    margin: 0;
+}
+
+.active {
+    background-color: #004;
+}
+
+div.centered {
+    text-align: center;
+}
+
+table.dataframe {
+    width: 98%;
+    margin: 1%;
+}
+
+table.dataframe th{
+    text-align: center;
+    padding: 1%;
+    background: #555;
+}
+
+table.dataframe tr:nth-child(even){
+    background: #004;
+}
+
+table.dataframe td{
+    padding: 1%;
+    border-color: #aaa;
+}
+
+input {
+    margin: 5px;
+}
+
+td {
+    min-width: 70px;
+    max-width: 30vw;
+    overflow: clip;
+}
