@@ -45,6 +45,15 @@ def load_data():
 
     if os.path.exists("./data/events.csv"):
         df = pd.read_csv("./data/events.csv")
+        expected_cols = ["event", "description", "start", "duration", "location"]
+        for col in expected_cols:
+            if col not in df.columns:
+                print('\033[91m', "Timetable is missing a Data: no", col, "Colum found!", '\033[0m')
+                print('\033[91m', "Aborting Setup! Please fix or delete 'data/events.csv'!", '\033[0m')
+                exit(1)
+        if not "id" in df.columns:
+            df["id"] = pd.Series([__create_id() for _ in range(len(df))], index=df.index)
+        df = df[["id"] + expected_cols]
         df.sort_values(by="start", inplace=True)
         df.reset_index(drop=True, inplace=True)
     else:
@@ -63,7 +72,7 @@ def load_data():
 
 def post_update():
     global df_events
-    csv = df_events.to_csv(index=False)
+    csv = df_events[["event", "description", "start", "duration", "location"]].to_csv(index=False)
     json_str = json.dumps({
         "event": config.get("post_api", "id"),
         "message": "TODO, just a string to display",
@@ -86,7 +95,7 @@ def update_table():
     global df_events
     df_events = df_prefab.copy()
     with open("./data/events.csv", "w") as file:
-        df_events.to_csv(file, index=False)
+        df_events[["event", "description", "start", "duration", "location"]].to_csv(file, index=False)
     post_update()
 
 
