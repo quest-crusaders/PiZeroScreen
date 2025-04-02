@@ -1,6 +1,15 @@
+:root {
+    --main: #0b4fb4;
+    --secundary: #1f8edd;
+    --text: #ffffff;
+
+    --warning-bk: #FF4500FF;
+    --warning-text: #ffffff;
+}
+
 body {
     background-color: black;
-    color: white;
+    color: var(--text);
     overflow: hidden;
     font-size: 150%;
 }
@@ -17,10 +26,50 @@ h3 {
     font-size: 150%;
 }
 
+.bottom_msg {
+    position: absolute;
+    bottom: 0;
+    text-align: center;
+    width: 100%;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.one_line {
+    overflow: hidden;
+    line-height: 2em;
+    max-height: 2em;
+    width: max-content;
+}
+
+
+div.warning {
+    background-color: var(--warning-bk);
+    color: var(--warning-text);
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+div.warning div {
+    text-align: center;
+    width: 100%;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    font-size: 200%;
+    color: var(--warning-text);
+}
+
 div.v3 {
     overflow: hidden;
     text-align: center;
-    background-color: #555;
+    background-color: var(--main);
     position: absolute;
     width: 33%;
     height: 100%;
@@ -30,7 +79,7 @@ div.v3 {
 div.h3 {
     overflow: hidden;
     text-align: center;
-    background-color: #555;
+    background-color: var(--main);
     position: absolute;
     width: 100%;
     height: 33%;
@@ -39,9 +88,11 @@ div.h3 {
 
 div.v_subplate {
     overflow: hidden;
-    position: absolute;
     width: 100%;
-    background: #888;
+    height: fit-content;
+    min-height: 25%;
+    margin: 0;
+    background: var(--secundary);
     border-radius: 20px 20px 0px 0px;
 }
 
@@ -49,7 +100,7 @@ div.h_subplate {
     overflow: hidden;
     position: absolute;
     height: 100%;
-    background: #888;
+    background: var(--secundary);
     border-radius: 20px 0px 0px 20px;
     padding: 0 2%;
 }

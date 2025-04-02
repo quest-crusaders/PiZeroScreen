@@ -1,16 +1,16 @@
+import json
 import pandas as pd
 import os
 from datetime import datetime, timedelta
 from configparser import ConfigParser
 import random
-
+import requests
 
 ID_LENGTH = 16
 config = ConfigParser()
 df_events: pd.DataFrame = None
 df_prefab: pd.DataFrame = None
-dc = False
-
+msg_of_the_day = ""
 
 def null_proof(data):
     if data is None:
@@ -22,7 +22,7 @@ def null_proof(data):
 
 def get_timestamp(*, add=0):
     time = datetime.now() + timedelta(minutes=add)
-    return time.strftime("%Y-%m-%d_%H-%M")
+    return time.strftime("%Y-%m-%d_%H:%M")
 
 def __create_id():
     key = "".join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(ID_LENGTH)])
@@ -32,9 +32,10 @@ def __create_id():
     return key
 
 def load_data():
-    global df_events, df_prefab, dc
+    global df_events, df_prefab
     config["admin"] = {"password": "password123"}
     config["server"] = {"host": "127.0.0.1", "port": "8080"}
+    config["post_api"] = {"id": "test", "url": "your url"}
 
     if os.path.exists("./data/config.ini"):
         config.read("./data/config.ini")
@@ -53,15 +54,29 @@ def load_data():
             "event": ["Sample_"+str(i) for i in range(sample_num)],
             "description": ["Just an Example." for _ in range(sample_num)],
             "start": [get_timestamp(add=10*i) for i in range(sample_num)],
+            "duration": [30 for _ in range(sample_num)],
             "location": ["stage"+str(i%6) for i in range(sample_num)]
         }
         df = pd.DataFrame(data)
     df_events = df.copy()
     df_prefab = df.copy()
 
+def post_update():
+    global df_events
+    csv = df_events.to_csv(index=False)
+    json_str = json.dumps({
+        "event": config.get("post_api", "id"),
+        "message": "TODO, just a string to display",
+        "data": csv,
+    })
+    try:
+        requests.post(config.get("post_api", "url"), json=json_str)
+    except requests.exceptions.RequestException:
+        print('\033[91m', "Failed to post event update too Website", '\033[0m')
+
 
 def check_login(pw):
-    return config["admin"]["password"] == pw
+    return config.get("admin", "password") == pw
 
 def reset_prefab():
     global df_prefab
@@ -70,6 +85,9 @@ def reset_prefab():
 def update_table():
     global df_events
     df_events = df_prefab.copy()
+    with open("./data/events.csv", "w") as file:
+        df_events.to_csv(file, index=False)
+    post_update()
 
 
 def get_time_table(*, prefab=False, location: None|str=None):
@@ -91,16 +109,18 @@ def get_current_event(location, *, prefab=False):
     df = df[df["location"] == location]
     df.reset_index(inplace=True)
     if len(df) == 0:
-        return "", "", ""
+        return "", "", "", None
     index = 0
     tstamp = get_timestamp()
-    while df.iloc[index]["start"] < tstamp:
+    while index < len(df) and df.iloc[index]["start"] < tstamp:
         index += 1
     index -= 1
     if index < 0:
-        return "", "", ""
+        return "", "", "", None
     event = df.iloc[index]
-    return null_proof(event["event"]), null_proof(event["description"]), null_proof(event["start"])
+    if event["start"] < get_timestamp(add=-int(event["duration"])):
+        return "Break", "Pleas wait for the next Event to start", "", None
+    return event["event"], event["description"], event["start"], event["duration"]
 
 def get_next_event(location, *, prefab=False):
     if prefab:
@@ -110,32 +130,35 @@ def get_next_event(location, *, prefab=False):
     df = df[df["location"] == location]
     df.reset_index(inplace=True)
     if len(df) == 0:
-        return "", "", ""
+        return "", "", "", None
     index = 0
     tstamp = get_timestamp()
-    while df.iloc[index]["start"] < tstamp:
+    while index < len(df) and df.iloc[index]["start"] < tstamp:
         index += 1
+    if index == len(df):
+        return "", "", "", None
     event = df.iloc[index]
-    return null_proof(event["event"]), null_proof(event["description"]), null_proof(event["start"])
+    return event["event"], event["description"], event["start"], event["duration"]
 
 def get_locations():
     return df_events["location"].unique().tolist()
 
-def edit_event(id, name, description, start, location):
+def edit_event(id, name, description, start, duration, location):
     index = df_prefab.loc[df_prefab["id"] == id].index[0]
-    df_prefab.iloc[int(index)] = (id, name, description, start, location)
+    df_prefab.iloc[int(index)] = (id, name, description, start, duration, location)
 
 def delete_event(id):
     index = df_prefab.loc[df_prefab["id"] == id].index[0]
     df_prefab.drop(index, inplace=True)
 
-def add_event(name, description, start, location):
+def add_event(name, description, start, duration, location):
     global df_prefab
     data = {
         "id": [__create_id()],
         "event": [name],
         "description": [description],
         "start": [start],
+        "duration": [duration],
         "location": [location]
     }
     df_prefab = pd.concat([df_prefab, pd.DataFrame(data)])

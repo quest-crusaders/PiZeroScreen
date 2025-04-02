@@ -17,7 +17,6 @@ let socket = null
 
 function init(socket) {socket.send(myMAC);}
 function receive(event) {
-    console.log(event);
     const data = JSON.parse(event.data);
 
     let elem = null;
@@ -28,6 +27,7 @@ function receive(event) {
     }
     if (elem) {
         elem.innerHTML = data.html;
+        nodeScriptReplace(elem);
     }
 }
 
@@ -38,6 +38,34 @@ function connect() {
     socket.addEventListener("open", (event) => {init(socket);});
     socket.addEventListener("close", (event) => {connect()});
     socket.addEventListener("message", (event) => {receive(event);})
+}
+
+function nodeScriptReplace(node) {
+        if ( nodeScriptIs(node) === true ) {
+                node.parentNode.replaceChild( nodeScriptClone(node) , node );
+        }
+        else {
+                var i = -1, children = node.childNodes;
+                while ( ++i < children.length ) {
+                      nodeScriptReplace( children[i] );
+                }
+        }
+
+        return node;
+}
+function nodeScriptClone(node){
+        var script  = document.createElement("script");
+        script.text = node.innerHTML;
+
+        var i = -1, attrs = node.attributes, attr;
+        while ( ++i < attrs.length ) {
+              script.setAttribute( (attr = attrs[i]).name, attr.value );
+        }
+        return script;
+}
+
+function nodeScriptIs(node) {
+        return node.tagName === 'SCRIPT';
 }
 
 connect()

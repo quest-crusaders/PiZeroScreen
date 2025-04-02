@@ -36,6 +36,17 @@ li a:hover {
 
 div.centered {
     text-align: center;
+    margin: auto;
+}
+
+div.block {
+    background-color: #555;
+    border: none;
+    border-radius: 20px;
+    width: fit-content;
+    min-width: 50%;
+    margin-top: 5vh;
+    padding: 20px;
 }
 
 table.dataframe {

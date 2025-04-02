@@ -10,6 +10,7 @@
   <li><a class="active" href="/admin/index.html">Zeitplan</a></li>
   <li><a href="/admin/screens.html">Bildschirme</a></li>
   <li><a href="/admin/preview.html">Vorab Ansicht</a></li>
+  <li><a href="/admin/messages.html">Nachrichten</a></li>
 </ul>
 <script>
     function filter() {
@@ -48,15 +49,17 @@
                             <td>Event</td>
                             <td>Beschreibung</td>
                             <td>Start</td>
+                            <td>Dauer</td>
                             <td>Ort</td>
                             <td></td>
                         </tr>
                         <tr>
                             <td><input type="text" name="id" id="id"></td>
-                            <td><input type="text" name="event" id="event"></td>
+                            <td><input type="text" minlength="3" name="event" id="event"></td>
                             <td><input type="text" name="description" id="desc"></td>
-                            <td><input type="text" name="start" id="start"></td>
-                            <td><input type="text" name="location" id="loc"></td>
+                            <td><input type="datetime-local" name="start" id="start"></td>
+                            <td><input type="number" min="1" name="duration" id="duration"></td>
+                            <td><input type="text" min="3" name="location" id="loc"></td>
                             <td><input type="submit" value="Ändern"></td>
                         </tr>
                     </table>
@@ -69,14 +72,16 @@
                             <td>Event</td>
                             <td>Beschreibung</td>
                             <td>Start</td>
+                            <td>Dauer</td>
                             <td>Ort</td>
                             <td></td>
                         </tr>
                         <tr>
-                            <td><input type="text" name="event"></td>
+                            <td><input type="text" minlength="3" name="event"></td>
                             <td><input type="text" name="description"></td>
-                            <td><input type="text" name="start"></td>
-                            <td><input type="text" name="location"></td>
+                            <td><input type="datetime-local" name="start"></td>
+                            <td><input type="number" min="1" name="duration"></td>
+                            <td><input type="text" minlength="3" name="location"></td>
                             <td><input type="submit" value="Einfügen"></td>
                         </tr>
                     </table>

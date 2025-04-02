@@ -5,9 +5,44 @@
   </div>
   <div style="display: inline-block">
     <p id="event_desc"></p>
+    <p id="msg_of_the_day" class="bottom_msg one_line"></p>
   </div>
+  <script>
+    var msg = document.getElementById("msg_of_the_day");
+    var side_panel = document.getElementById("side_panel");
+    var offset = 0;
+    var is_scrolling = false;
 
-  <div  class="h_subplate" style="right: 0px;top: 0px;">
+    var text_loop_len = 100;
+
+    setTimeout(loop, 1000);
+
+    function loop(){
+      setTimeout(loop, 20);
+      msg.innerText = msg.innerText.replaceAll("\n", " ");
+      let ref_width = msg.parentElement.parentElement.offsetWidth-(2*side_panel.offsetWidth);
+      console.log(msg.offsetWidth+"/"+ref_width.toString())
+      if (is_scrolling){
+        if (msg.offsetWidth < ref_width){
+          offset = 0;
+          is_scrolling = false;
+          msg.style = "";
+        }else {
+          offset++;
+          if (offset > msg.offsetWidth + (window.innerWidth/2)){
+            offset = -(window.innerWidth/2) + side_panel.offsetWidth;
+          }
+          msg.style = "transform: translate("+(-offset).toString()+"px, 0)";
+        }
+      }else {
+        if (msg.offsetWidth >= ref_width) {
+          is_scrolling = true;
+        }
+      }
+    }
+  </script>
+
+  <div id="side_panel" class="h_subplate" style="right: 0px;top: 0px;">
     <h2>Next Event:</h2>
     <div id="event_next"></div>
   </div>

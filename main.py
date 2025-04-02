@@ -1,3 +1,4 @@
+import requests
 from aiohttp import web
 import asyncio
 import json
@@ -35,6 +36,8 @@ app.add_routes([
                 web.post("/admin/reset_table", ah.post_reset_table),
                 web.post("/admin/submit_table", ah.post_submit_table),
                 web.post("/admin/screens", ah.post_screen_layout),
+                web.post("/admin/warning", ah.post_warning),
+                web.post("/admin/msg_of_the_day", ah.post_msg_of_the_day),
                 web.get("/admin/screens", ah.get_screens),
                 web.get("/admin", ah.get_login),
                 web.get("/admin/time_table", ah.get_timetable),
@@ -47,45 +50,50 @@ def data_update_loop():
     sleep(5)
     current_events = {}
     next_events = {}
+    msg_of_the_day = dm.msg_of_the_day
     for L in dm.get_locations():
         current_events[L] = [dm.get_current_event(L)]
         next_events[L] = dm.get_next_event(L)
     while True:
         loop_count += 1
-        sleep(10)
+        sleep(1)
         if LOOP is None:
+            requests.get("http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port"))
             continue
+        if msg_of_the_day != dm.msg_of_the_day:
+            print('\033[93m', "Updating Screens Message", '\033[0m')
+            msg_of_the_day = dm.msg_of_the_day
+            my_data = {"id": "msg_of_the_day", "html": msg_of_the_day}
+            for ws in hh.CLIENTS:
+                asyncio.run_coroutine_threadsafe(ws.send_str(json.dumps(my_data)), LOOP)
         for L in dm.get_locations():
             current_event = current_events.get(L)
             next_event = next_events.get(L)
+            update = []
             if current_event != dm.get_current_event(L):
-                print("Update current event")
                 current_event = dm.get_current_event(L)
                 current_events[L] = current_event
                 for ws in hh.CLIENTS:
                     if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
                         continue
-                    event, desc, _ = current_event
-                    my_data = {"id": "event_name", "html": event}
-                    asyncio.run_coroutine_threadsafe(ws.send_str(json.dumps(my_data)), LOOP)
-                    my_data = {"id": "event_desc", "html": desc}
-                    asyncio.run_coroutine_threadsafe(ws.send_str(json.dumps(my_data)), LOOP)
+                    if not update.__contains__(ws):
+                        update.append(ws)
             if next_event != dm.get_next_event(L):
-                print("Update next event")
                 next_event = dm.get_next_event(L)
                 next_events[L] = next_event
                 for ws in hh.CLIENTS:
                     if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
                         continue
-                    event, desc, start_str = next_event
-                    html = '<h3>' + event + '</h3>\n'
-                    html += '<p>Starting at: ' + start_str[-5:].replace("-", ":") + '</p>\n'
-                    my_data = {"id": "event_next", "html": html}
-                    asyncio.run_coroutine_threadsafe(ws.send_str(json.dumps(my_data)), LOOP)
+                    if not update.__contains__(ws):
+                        update.append(ws)
+            if len(update) > 0:
+                print('\033[93m', "Updating Screens at", L, '\033[0m')
+            for ws in update:
+                asyncio.run_coroutine_threadsafe(hh.send_data(ws), LOOP)
 
 
 if __name__ == '__main__':
-    print("STARTED AT:", dm.get_timestamp())
+    print('\033[95m', "STARTED AT:", dm.get_timestamp(), '\033[0m')
     update_thread = Thread(target=data_update_loop)
     update_thread.daemon = True
     update_thread.start()

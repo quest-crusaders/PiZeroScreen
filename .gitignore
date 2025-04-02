@@ -1,4 +1,7 @@
 .venv
 *.ini
+*.json
+*.csv
+*.tsv
 .idea
 __pycache__

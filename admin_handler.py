@@ -1,4 +1,6 @@
 import json
+import time
+
 from aiohttp import web
 import random
 from datetime import datetime
@@ -38,11 +40,12 @@ async def get_timetable(request):
     if True:
         html += """
         <script>
-            function edit(id, name, desc, start, loc) {
+            function edit(id, name, desc, start, duration, loc) {
                 parent.document.getElementById("id").value = id;
                 parent.document.getElementById("event").value = name;
                 parent.document.getElementById("desc").value = desc;
-                parent.document.getElementById("start").value = start;
+                parent.document.getElementById("start").value = start.replaceAll("_", "T");
+                parent.document.getElementById("duration").value = duration;
                 parent.document.getElementById("loc").value = loc;
             }
             
@@ -71,14 +74,20 @@ async def post_edit_entry(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
     data = await request.post()
-    dm.edit_event(data['id'], data['event'], data['description'], data['start'], data['location'])
+    if data["id"] != "":
+        start = data['start'].replace("T", "_")
+        duration = int(data['duration'])
+        dm.edit_event(data['id'], data['event'], data['description'], start, duration, data['location'])
     return web.HTTPFound("/admin/index.html")
 
 async def post_add_entry(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
     data = await request.post()
-    dm.add_event(data['event'], data['description'], data['start'], data['location'])
+    if data["event"] != "":
+        start = data['start'].replace("T", "_")
+        duration = int(data['duration'])
+        dm.add_event(data['event'], data['description'], start, duration, data['location'])
     return web.HTTPFound("/admin/index.html")
 
 async def post_delete_entry(request):
@@ -126,20 +135,49 @@ async def get_screens(request):
 async def post_screen_layout(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
+    print('\033[93m', "Updating Screen Layouts", '\033[0m')
     data = await request.post()
     screens = [s for s in hh.layout_map.keys()]
+    update = []
     for S in screens:
-        if data[S+"_layout"] != hh.layout_map.get(S) or data["force"] == "on":
+        if data[S+"_layout"] != hh.layout_map.get(S) or data.get("force") == "on":
             hh.layout_map[S] = data[S+"_layout"]
             html = hh.layouts.get(hh.layout_map.get(S, "default"))
             my_data = {"id": "body", "html": html}
             for ws in [ws for ws in hh.CLIENTS.keys() if hh.CLIENTS.get(ws) == S]:
                 await ws.send_str(json.dumps(my_data))
+                if not update.__contains__(ws):
+                    update.append(ws)
         if data[S+"_location"] != hh.location_map.get(S):
             hh.location_map[S] = data[S+"_location"]
             for ws in [ws for ws in hh.CLIENTS.keys() if hh.CLIENTS.get(ws) == S]:
-                hh.send_data(ws)
+                 if not update.__contains__(ws):
+                     update.append(ws)
+        for ws in update:
+            await hh.send_data(ws)
+    with open("./data/layouts.json", "w+") as f:
+        f.write(json.dumps(hh.layout_map))
+    with open("./data/locations.json", "w+") as f:
+        f.write(json.dumps(hh.location_map))
     return web.HTTPFound("/admin/screens")
+
+async def post_msg_of_the_day(request):
+    if not check_auth(request):
+        return web.Response(text="Unauthorized", status=401, content_type="text/html")
+    data = await request.post()
+    dm.msg_of_the_day = data["msg"]
+    return web.HTTPFound("/admin/messages.html")
+
+async def post_warning(request):
+    if not check_auth(request):
+        return web.Response(text="Unauthorized", status=401, content_type="text/html")
+    print('\033[93m', "Updating Screen Layouts", '\033[0m')
+    data = await request.post()
+    html = open("Warning.html").read().replace("[MSG]", data["msg"])
+    my_data = {"id": "body", "html": html}
+    for ws in hh.CLIENTS.keys():
+        await ws.send_str(json.dumps(my_data))
+    return web.HTTPFound("/admin/messages.html")
 
 async def login(request):
     query = await request.post()
