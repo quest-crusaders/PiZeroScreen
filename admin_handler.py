@@ -129,7 +129,7 @@ async def get_screens(request):
         html += "<td><select name='"+S+"_layout' value='"+hh.layout_map.get(S)+"'>"+make_layout_opt(hh.layout_map.get(S))+"</select></td>"
         html += "<td><select name='"+S+"_location' value='"+hh.location_map.get(S)+"'>"+make_location_opt(hh.location_map.get(S))+"</select></td>"
         html += "</tr>\n"
-    html += "</table>\n<label>Update erzwingen </label><input type='checkbox' name='force'><br><input type='submit' value='Änderungen übernehmen'></form>\n"
+    html += "</table>\n<label>force Update </label><input type='checkbox' name='force'><br><input type='submit' value='commit changes'></form>\n"
     return web.Response(text=html, content_type='text/html')
 
 async def post_screen_layout(request):

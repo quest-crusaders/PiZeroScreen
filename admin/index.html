@@ -7,10 +7,10 @@
 </head>
 <body>
  <ul>
-  <li><a class="active" href="/admin/index.html">Zeitplan</a></li>
-  <li><a href="/admin/screens.html">Bildschirme</a></li>
-  <li><a href="/admin/preview.html">Vorab Ansicht</a></li>
-  <li><a href="/admin/messages.html">Nachrichten</a></li>
+  <li><a class="active" href="/admin/index.html">Timetable</a></li>
+  <li><a href="/admin/screens.html">Screens</a></li>
+  <li><a href="/admin/preview.html">Preview</a></li>
+  <li><a href="/admin/messages.html">Messages</a></li>
 </ul>
 <script>
     function filter() {
@@ -22,13 +22,13 @@
     }
 </script>
 <div class="centered">
-    <label>Zeige nur für Ort: </label>
-    <input type="text" placeholder="leer lassen für alle Orte." id="loc_filter">
-    <input type="button" value="Filtern" onclick="filter()">
+    <label>only show: </label>
+    <input type="text" placeholder="keep empty for all locations" id="loc_filter">
+    <input type="button" value="Filter" onclick="filter()">
 </div>
 
 <table style="width: 100%;">
-    <tr><th>aktiver Zeitplan:</th><th>bearbeiteter Zeitplan:</th></tr>
+    <tr><th>active Timetable:</th><th>edited Timetable:</th></tr>
     <tr>
         <td>
             <iframe src="/admin/time_table" style="width: 97%;height: 60vh;"></iframe>
@@ -47,9 +47,9 @@
                         <tr>
                             <td>ID</td>
                             <td>Event</td>
-                            <td>Beschreibung</td>
+                            <td>Description</td>
                             <td>Start</td>
-                            <td>Dauer</td>
+                            <td>Length</td>
                             <td>Ort</td>
                             <td></td>
                         </tr>
@@ -60,7 +60,7 @@
                             <td><input type="datetime-local" name="start" id="start"></td>
                             <td><input type="number" min="1" name="duration" id="duration"></td>
                             <td><input type="text" min="3" name="location" id="loc"></td>
-                            <td><input type="submit" value="Ändern"></td>
+                            <td><input type="submit" value="Update"></td>
                         </tr>
                     </table>
                 </form>
@@ -70,9 +70,9 @@
                     <table>
                         <tr>
                             <td>Event</td>
-                            <td>Beschreibung</td>
+                            <td>Description</td>
                             <td>Start</td>
-                            <td>Dauer</td>
+                            <td>Length</td>
                             <td>Ort</td>
                             <td></td>
                         </tr>
@@ -82,7 +82,7 @@
                             <td><input type="datetime-local" name="start"></td>
                             <td><input type="number" min="1" name="duration"></td>
                             <td><input type="text" minlength="3" name="location"></td>
-                            <td><input type="submit" value="Einfügen"></td>
+                            <td><input type="submit" value="Add"></td>
                         </tr>
                     </table>
                 </form>
@@ -96,7 +96,7 @@
                         </tr>
                         <tr>
                             <td><input type="text" name="id"></td>
-                            <td><input type="submit" value="Löschen"></td>
+                            <td><input type="submit" value="Delete"></td>
                         </tr>
                     </table>
                 </form>
@@ -105,12 +105,12 @@
         <td>
             <div>
                 <form action="/admin/reset_table" method="post">
-                    <input type="submit" value="Änderungen zurücksetzen">
+                    <input type="submit" value="revert all changes">
                 </form>
             </div>
             <div>
                 <form action="/admin/submit_table" method="post">
-                    <input type="submit" value="Änderungen übernehmen">
+                    <input type="submit" value="commit all changes">
                 </form>
             </div>
         </td>
