@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin panel</title>
+    <link rel="stylesheet" href="/ui.css">
+</head>
+<body>
+<ul>
+  <li><a href="/admin/index.html">Zeitplan</a></li>
+  <li><a href="/admin/screens.html">Bildschirme</a></li>
+  <li><a href="/admin/preview.html">Vorab Ansicht</a></li>
+  <li><a class="active" href="/admin/messages.html">Nachrichten</a></li>
+</ul>
+
+<div class="centered block">
+    <h3>Nachricht des Tages:</h3>
+    <form action="/admin/msg_of_the_day" method="post">
+        <input type="text" name="msg" style="width: 50%"><input type="submit" value="Anzeigen">
+    </form>
+</div>
+
+<div class="centered block">
+    <h3>Warn Meldung:</h3>
+    <form action="/admin/warning" method="post">
+        <input type="text" name="msg" style="width: 50%"><input type="submit" value="Anzeigen">
+    </form>
+</div>
+
+</body>
+</html>
