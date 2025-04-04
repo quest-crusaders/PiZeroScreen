@@ -1,9 +1,7 @@
+#PiZeroScreen
 
-**PiZeroScreen**
--
-
-This Python3 Software is ment to controll multiple Info-Screens.
-Each Screen itself being pluged into a RaspberyPiZero2W with a Webbrowser as Frontend.
+This Python3 Software is ment to control multiple Info-Screens.
+Each Screen itself being plugged into a Raspberry PiZero2W with a browser as Frontend.
 
 **Requirements:**
 -
@@ -12,7 +10,7 @@ Needed:
 - all Python-Modules as listed in requirements.txt
 
 Recommended:
-- A Reverseproxy like Caddy or Nginx for https
+- A Reverse proxy like Caddy or Nginx for https
 
 **Install and Run:**
 -
@@ -48,10 +46,10 @@ python main.py
 
 **Configuration**
 -
-The Configfile is found in ```./data/config.ini``` and consits of following blocks:
+The Configfile is found in ```./data/config.ini``` and consists of following blocks:
 
 **admin**
-The Admin block hold only one Parameter, witch sets the Password for the Admin pannel
+The Admin block hold only one Parameter, witch sets the Password for the Admin panel
 ```
 [admin]
 password = password123
@@ -70,10 +68,10 @@ This Block is optional and used to post all Database changes to a Server.
 
 The post data is a Json with 3 named elements:
 - id: an identifier String read from the config used to handle multiple instances posting to one Server
-- message: The Message of the Day String as set in the Admin-Controllpanel
+- message: The Message of the Day String as set in the Admin-Control-panel
 - data: a String containing the complete Timetable in CSV formating
 
-The Config-Block can set the URL at witch to post, aswell as the id-String to pass.
+The Config-Block can set the URL at witch to post, as well as the id-String to pass.
 ```
 [post_api]
 id = test
