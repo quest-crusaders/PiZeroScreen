@@ -13,6 +13,8 @@
   <li><a href="/admin/messages.html">Messages</a></li>
 </ul>
 <script>
+    const urlParams = new URLSearchParams(window.location.search);
+
     function filter() {
         let loc = document.getElementById("loc_filter").value;
         iframes = document.getElementsByTagName("iframe");
@@ -20,11 +22,22 @@
         iframes[0].src="/admin/time_table?loc="+loc;
         iframes[1].src="/admin/time_table?prefab=true&loc="+loc;
     }
+
+    function set_filter() {
+        document.getElementById('loc_filter').value = urlParams.get('filter');
+    }
+
+    function pass_filter() {
+        let filter_elems = document.getElementsByClassName("filter")
+        for(let i=0; i<filter_elems.length; i++){
+            filter_elems[i].value = document.getElementById("loc_filter").value;
+        }
+    }
 </script>
 <div class="centered">
     <label>only show: </label>
     <input type="text" placeholder="keep empty for all locations" id="loc_filter">
-    <input type="button" value="Filter" onclick="filter()">
+    <input type="button" value="Filter" onclick="pass_filter();filter();">
 </div>
 
 <table style="width: 100%;">
@@ -38,11 +51,18 @@
         </td>
     </tr>
 </table>
+ <script>
+     set_filter();
+     filter();
+     pass_filter();
+ </script>
+
 <table style="width: 100%">
     <tr>
         <td>
             <div>
                 <form action="/admin/edit_event" method="post">
+                    <input type="text" name="filter" class="filter" hidden="hidden">
                     <table>
                         <tr>
                             <td>ID</td>
@@ -67,6 +87,7 @@
             </div>
             <div>
                 <form action="/admin/add_event" method="post">
+                    <input type="text" name="filter" class="filter" hidden="hidden">
                     <table>
                         <tr>
                             <td>Event</td>
@@ -89,6 +110,7 @@
             </div>
             <div>
                 <form action="/admin/delete_event" method="post">
+                    <input type="text" name="filter" class="filter" hidden="hidden">
                     <table>
                         <tr>
                             <td>ID</td>
@@ -116,5 +138,11 @@
         </td>
     </tr>
 </table>
+
+<script>
+    set_filter();
+    filter();
+    pass_filter();
+</script>
 </body>
 </html>
