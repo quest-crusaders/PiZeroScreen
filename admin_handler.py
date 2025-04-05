@@ -36,6 +36,8 @@ async def get_timetable(request):
         raise_404(request.path)
     prefab = request.rel_url.query.get('prefab') == "true"
     loc = request.rel_url.query.get('loc')
+    if loc == "":
+        loc = None
     html = '<link rel="stylesheet" href="/ui.css">\n' + dm.get_time_table(prefab=prefab, location=loc)
     if True:
         html += """
@@ -78,7 +80,10 @@ async def post_edit_entry(request):
         start = data['start'].replace("T", "_")
         duration = int(data['duration'])
         dm.edit_event(data['id'], data['event'], data['description'], start, duration, data['location'])
-    return web.HTTPFound("/admin/index.html")
+    ret = "/admin/index.html"
+    if data["filter"] != "":
+        ret += "?filter=" + data["filter"]
+    return web.HTTPFound(ret)
 
 async def post_add_entry(request):
     if not check_auth(request):
@@ -88,14 +93,20 @@ async def post_add_entry(request):
         start = data['start'].replace("T", "_")
         duration = int(data['duration'])
         dm.add_event(data['event'], data['description'], start, duration, data['location'])
-    return web.HTTPFound("/admin/index.html")
+    ret = "/admin/index.html"
+    if data["filter"] != "":
+        ret += "?filter=" + data["filter"]
+    return web.HTTPFound(ret)
 
 async def post_delete_entry(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
     data = await request.post()
     dm.delete_event(data['id'])
-    return web.HTTPFound("/admin/index.html")
+    ret = "/admin/index.html"
+    if data["filter"] != "":
+        ret += "?filter=" + data["filter"]
+    return web.HTTPFound(ret)
 
 async def post_reset_table(request):
     if not check_auth(request):

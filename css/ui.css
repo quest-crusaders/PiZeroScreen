@@ -30,6 +30,10 @@ li a:hover {
     margin: 0;
 }
 
+.filter {
+    display: none;
+}
+
 .active {
     background-color: #004;
 }

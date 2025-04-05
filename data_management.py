@@ -157,8 +157,11 @@ def edit_event(id, name, description, start, duration, location):
     df_prefab.iloc[int(index)] = (id, name, description, start, duration, location)
 
 def delete_event(id):
-    index = df_prefab.loc[df_prefab["id"] == id].index[0]
-    df_prefab.drop(index, inplace=True)
+    try:
+        index = df_prefab.loc[df_prefab["id"] == id].index[0]
+        df_prefab.drop(index, inplace=True)
+    except IndexError:
+        pass
 
 def add_event(name, description, start, duration, location):
     global df_prefab
