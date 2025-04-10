@@ -93,7 +93,9 @@ def data_update_loop():
 
 
 if __name__ == '__main__':
+    admin_url = "http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port") + "/admin"
     print('\033[95m', "STARTED AT:", dm.get_timestamp(), '\033[0m')
+    print('\033[95m', "Visit Admin Panel at:", admin_url, '\033[0m')
     update_thread = Thread(target=data_update_loop)
     update_thread.daemon = True
     update_thread.start()
