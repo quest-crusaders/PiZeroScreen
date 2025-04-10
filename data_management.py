@@ -7,6 +7,7 @@ import random
 import requests
 
 ID_LENGTH = 16
+DATA_COLUMNS = ["event", "description", "type", "start", "duration", "location"]
 config = ConfigParser()
 df_events: pd.DataFrame = None
 df_prefab: pd.DataFrame = None
@@ -45,15 +46,14 @@ def load_data():
 
     if os.path.exists("./data/events.csv"):
         df = pd.read_csv("./data/events.csv")
-        expected_cols = ["event", "description", "start", "duration", "location"]
-        for col in expected_cols:
+        for col in DATA_COLUMNS:
             if col not in df.columns:
                 print('\033[91m', "Timetable is missing a Data: no", col, "Colum found!", '\033[0m')
                 print('\033[91m', "Aborting Setup! Please fix or delete 'data/events.csv'!", '\033[0m')
                 exit(1)
         if not "id" in df.columns:
             df["id"] = pd.Series([__create_id() for _ in range(len(df))], index=df.index)
-        df = df[["id"] + expected_cols]
+        df = df[["id"] + DATA_COLUMNS]
         df.sort_values(by="start", inplace=True)
         df.reset_index(drop=True, inplace=True)
     else:
@@ -62,6 +62,7 @@ def load_data():
             "id": [__create_id() for _ in range(sample_num)],
             "event": ["Sample_"+str(i) for i in range(sample_num)],
             "description": ["Just an Example." for _ in range(sample_num)],
+            "type": ["default" for _ in range(sample_num)],
             "start": [get_timestamp(add=10*i) for i in range(sample_num)],
             "duration": [30 for _ in range(sample_num)],
             "location": ["stage"+str(i%6) for i in range(sample_num)]
@@ -72,7 +73,7 @@ def load_data():
 
 def post_update():
     global df_events
-    csv = df_events[["event", "description", "start", "duration", "location"]].to_csv(index=False)
+    csv = df_events[DATA_COLUMNS].to_csv(index=False)
     json_str = json.dumps({
         "event": config.get("post_api", "id"),
         "message": "TODO, just a string to display",
@@ -95,7 +96,7 @@ def update_table():
     global df_events
     df_events = df_prefab.copy()
     with open("./data/events.csv", "w") as file:
-        df_events[["event", "description", "start", "duration", "location"]].to_csv(file, index=False)
+        df_events[DATA_COLUMNS].to_csv(file, index=False)
     post_update()
 
 
@@ -152,9 +153,9 @@ def get_next_event(location, *, prefab=False):
 def get_locations():
     return df_events["location"].unique().tolist()
 
-def edit_event(id, name, description, start, duration, location):
+def edit_event(id, name, description, type, start, duration, location):
     index = df_prefab.loc[df_prefab["id"] == id].index[0]
-    df_prefab.iloc[int(index)] = (id, name, description, start, duration, location)
+    df_prefab.iloc[int(index)] = (id, name, description, type, start, duration, location)
 
 def delete_event(id):
     try:
@@ -163,12 +164,13 @@ def delete_event(id):
     except IndexError:
         pass
 
-def add_event(name, description, start, duration, location):
+def add_event(name, description, type, start, duration, location):
     global df_prefab
     data = {
         "id": [__create_id()],
         "event": [name],
         "description": [description],
+        "type": [type],
         "start": [start],
         "duration": [duration],
         "location": [location]

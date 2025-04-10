@@ -42,10 +42,11 @@ async def get_timetable(request):
     if True:
         html += """
         <script>
-            function edit(id, name, desc, start, duration, loc) {
+            function edit(id, name, desc, type, start, duration, loc) {
                 parent.document.getElementById("id").value = id;
                 parent.document.getElementById("event").value = name;
                 parent.document.getElementById("desc").value = desc;
+                parent.document.getElementById("type").value = type;
                 parent.document.getElementById("start").value = start.replaceAll("_", "T");
                 parent.document.getElementById("duration").value = duration;
                 parent.document.getElementById("loc").value = loc;
@@ -79,7 +80,7 @@ async def post_edit_entry(request):
     if data["id"] != "":
         start = data['start'].replace("T", "_")
         duration = int(data['duration'])
-        dm.edit_event(data['id'], data['event'], data['description'], start, duration, data['location'])
+        dm.edit_event(data['id'], data['event'], data['description'], data['type'], start, duration, data['location'])
     ret = "/admin/index.html"
     if data["filter"] != "":
         ret += "?filter=" + data["filter"]
@@ -92,7 +93,7 @@ async def post_add_entry(request):
     if data["event"] != "":
         start = data['start'].replace("T", "_")
         duration = int(data['duration'])
-        dm.add_event(data['event'], data['description'], start, duration, data['location'])
+        dm.add_event(data['event'], data['description'], data['type'], start, duration, data['location'])
     ret = "/admin/index.html"
     if data["filter"] != "":
         ret += "?filter=" + data["filter"]
