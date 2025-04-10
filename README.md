@@ -27,7 +27,7 @@ Recommended:
   ```
 - install the required Python-Modules
   ```
-  python -m pip install requirements.txt
+  python -m pip install -r requirements.txt
   ```
 - run the Software to create the file
   ```
