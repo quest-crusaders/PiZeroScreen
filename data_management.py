@@ -41,6 +41,19 @@ def load_data():
     if os.path.exists("./data/config.ini"):
         config.read("./data/config.ini")
     else:
+        try:
+            os.mkdir("./data")
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir("./static")
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir("./fonts")
+        except FileExistsError:
+            pass
+
         with open("./data/config.ini", "w") as f:
             config.write(f)
 
