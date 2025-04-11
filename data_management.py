@@ -36,7 +36,7 @@ def load_data():
     global df_events, df_prefab
     config["admin"] = {"password": "password123"}
     config["server"] = {"host": "127.0.0.1", "port": "8080"}
-    config["post_api"] = {"id": "test", "url": "your url"}
+    config["post_api"] = {"id": "test", "url": ""}
 
     if os.path.exists("./data/config.ini"):
         config.read("./data/config.ini")
@@ -86,6 +86,8 @@ def load_data():
 
 def post_update():
     global df_events
+    if config.get("post_api", "url") == "":
+        return
     csv = df_events[DATA_COLUMNS].to_csv(index=False)
     json_str = json.dumps({
         "event": config.get("post_api", "id"),
