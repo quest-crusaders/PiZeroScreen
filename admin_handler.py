@@ -38,7 +38,7 @@ async def get_timetable(request):
     loc = request.rel_url.query.get('loc')
     if loc == "":
         loc = None
-    html = '<link rel="stylesheet" href="/ui.css">\n' + dm.get_time_table(prefab=prefab, location=loc)
+    html = '<!DOCTYPE html>\n<link rel="stylesheet" href="/ui.css">\n' + dm.get_time_table(prefab=prefab, location=loc)
     if True:
         html += """
         <script>
@@ -135,7 +135,7 @@ async def get_screens(request):
         map = {selected: " selected='selected'"}
         return "\n".join(["<option"+map.get(L, "")+" value='"+L+"'>"+L+"</option>" for L in locations])
 
-    html = '<link rel="stylesheet" href="/ui.css">\n<form action="/admin/screens" method="post"><table>\n'
+    html = '<!DOCTYPE html>\n<link rel="stylesheet" href="/ui.css">\n<form action="/admin/screens" method="post"><table>\n'
     for S in screens:
         html += "<tr><td>" + S + "</td>"
         html += "<td><select name='"+S+"_layout' value='"+hh.layout_map.get(S)+"'>"+make_layout_opt(hh.layout_map.get(S))+"</select></td>"
