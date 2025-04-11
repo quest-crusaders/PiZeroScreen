@@ -40,6 +40,7 @@ app.add_routes([
                 web.post("/admin/msg_of_the_day", ah.post_msg_of_the_day),
                 web.get("/admin/screens", ah.get_screens),
                 web.get("/admin", ah.get_login),
+                web.get("/admin/logout", ah.logout),
                 web.get("/admin/time_table", ah.get_timetable),
                 web.get("/admin/{file:.*}.html", ah.get_admin_page)
 ])

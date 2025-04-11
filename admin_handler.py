@@ -225,6 +225,16 @@ async def login(request):
         resp.cookies["session"] = ""
         return resp
 
+async def logout(request):
+    resp = web.HTTPFound("/admin")
+    cookie = request.cookies.get("session")
+    resp.cookies["session"] = ""
+    try:
+        sessions.remove(cookie)
+    except ValueError:
+        pass
+    return resp
+
 def get_login(request):
     if check_auth(request):
         raise web.HTTPFound("/admin/index.html")
