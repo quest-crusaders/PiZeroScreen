@@ -6,7 +6,7 @@ from configparser import ConfigParser
 import random
 import requests
 
-ID_LENGTH = 16
+ID_LENGTH = 8
 DATA_COLUMNS = ["event", "description", "type", "start", "duration", "location"]
 config = ConfigParser()
 df_events: pd.DataFrame = None
@@ -27,9 +27,11 @@ def get_timestamp(*, add=0):
 
 def __create_id():
     key = "".join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(ID_LENGTH)])
+    count = 0
     if df_prefab is not None:
         while [id for id in df_prefab["id"]].__contains__(key):
-            key = "".join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(ID_LENGTH)])
+            key = "".join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(ID_LENGTH + (count//10))])
+            count += 1
     return key
 
 def load_data():
