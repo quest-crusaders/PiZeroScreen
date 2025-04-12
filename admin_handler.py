@@ -22,6 +22,21 @@ def __create_session_key():
     return key
 
 def check_auth(request):
+    ip = ""
+    try:
+        ip = request.headers["X-Forwarded-For"]
+    except KeyError:
+        ip = request.remote
+    ip_is_trusted = False
+    if ip == "127.0.0.1":
+        ip_is_trusted = True
+    else:
+        for t_ip in dm.config.get("admin", "trusted_ips").split(","):
+            if ip.startswith(t_ip):
+                ip_is_trusted = True
+                break
+    if not ip_is_trusted:
+        return False
     if request.cookies.get("session") is None:
         return False
     if sessions.__contains__(request.cookies.get("session")):
@@ -200,7 +215,23 @@ async def login(request):
     elif ret == "":
         ret = "/admin/index.html"
 
-    ip = request.remote
+    ip = ""
+    try:
+        ip = request.headers["X-Forwarded-For"]
+    except KeyError:
+        ip = request.remote
+    ip_is_trusted = False
+    if ip == "127.0.0.1":
+        ip_is_trusted = True
+    else:
+        for t_ip in dm.config.get("admin", "trusted_ips").split(","):
+            if ip.startswith(t_ip):
+                ip_is_trusted = True
+                break
+    if not ip_is_trusted:
+        resp = web.Response(text="IP address is not trusted!", status=401, content_type="text/html")
+        resp.cookies["session"] = ""
+        return resp
     if sus_ips.get(ip) is not None:
         count, tstamp = sus_ips.get(ip)
         t = min((3**max(0, count-2))-1, 60) - (datetime.now().timestamp() - tstamp)
@@ -219,6 +250,7 @@ async def login(request):
         cookie = __create_session_key()
         resp.cookies["session"] = cookie
         sessions.append(cookie)
+        print('\033[95m', "ADMIN login from:", ip, '\033[0m')
         return resp
     else:
         resp = web.Response(text="Wrong Password!", status=401, content_type="text/html")
