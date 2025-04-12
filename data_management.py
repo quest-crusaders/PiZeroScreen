@@ -34,7 +34,7 @@ def __create_id():
 
 def load_data():
     global df_events, df_prefab
-    config["admin"] = {"password": "password123"}
+    config["admin"] = {"password": "password123", "trusted_ips": "127.0.0.1"}
     config["server"] = {"host": "127.0.0.1", "port": "8080"}
     config["post_api"] = {"id": "test", "url": ""}
 
