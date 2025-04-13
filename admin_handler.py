@@ -209,11 +209,7 @@ async def post_warning(request):
 async def login(request):
     query = await request.post()
     pw = query.get("pw")
-    ret = query.get("return")
-    if ret is None:
-        ret = "/admin/index.html"
-    elif ret == "":
-        ret = "/admin/index.html"
+    ret = "/admin/index.html"
 
     ip = ""
     try:
