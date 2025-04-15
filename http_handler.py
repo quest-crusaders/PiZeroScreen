@@ -58,17 +58,17 @@ async def websocket_handler(request):
     screen_id = ""
     async for msg in ws:
         if msg.type == WSMsgType.TEXT:
-            lm.log("adding screen:", msg.data, msg_type=lm.LogType.ScreenLogin)
-            if msg.data == 'close':
+            if msg.data in ["close", "", "null"]:
                 await ws.close()
+                return ws
             else:
                 screen_id = msg.data
                 CLIENTS[ws] = screen_id
-                if screen_id != "null":
-                    if location_map.get(screen_id) is None:
-                        location_map[screen_id] = "default"
-                    if layout_map.get(screen_id) is None:
-                        layout_map[screen_id] = "default"
+                if location_map.get(screen_id) is None:
+                    location_map[screen_id] = "default"
+                if layout_map.get(screen_id) is None:
+                    layout_map[screen_id] = "default"
+                lm.log("adding screen:", screen_id, msg_type=lm.LogType.ScreenLogin)
                 html = layouts.get(layout_map.get(screen_id, "default"))
                 my_data = {"id": "body", "html": html}
                 await ws.send_str(json.dumps(my_data))
