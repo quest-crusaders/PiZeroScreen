@@ -8,6 +8,7 @@ import os
 
 import data_management as dm
 import http_handler as hh
+import logging_manager as lm
 
 SESSION_KEY_LENGTH = 64
 
@@ -162,7 +163,7 @@ async def get_screens(request):
 async def post_screen_layout(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
-    print('\033[93m', "Updating Screen Layouts", '\033[0m')
+    lm.log("Updating Screen Layouts", msg_type=lm.LogType.ScreenInfoUpdated)
     data = await request.post()
     screens = [s for s in hh.layout_map.keys()]
     update = []
@@ -198,13 +199,50 @@ async def post_msg_of_the_day(request):
 async def post_warning(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
-    print('\033[93m', "Updating Screen Layouts", '\033[0m')
     data = await request.post()
+    lm.log("Showing Warning:", data["msg"], msg_type=lm.LogType.SystemInfo)
     html = open("Warning.html").read().replace("[MSG]", data["msg"])
     my_data = {"id": "body", "html": html}
     for ws in hh.CLIENTS.keys():
         await ws.send_str(json.dumps(my_data))
     return web.HTTPFound("/admin/messages.html")
+
+async def get_logs(request):
+    if not check_auth(request):
+        return web.Response(text="Unauthorized", status=401, content_type="text/html")
+    logs = lm.MESSAGE_LOG.copy()
+    html = '<!DOCTYPE html><html lang="en">\n<head>\n<meta charset="UTF-8">\n<link rel="stylesheet" href="/ui.css"></head>\n<body>\n'
+    html += """
+    <script>
+    function filter(mclass) {
+        elems = document.getElementsByClassName(mclass);
+        for (var i = 0; i < elems.length; i++) {
+            if (elems[i].tagName == "DIV"){
+                if (document.getElementById(mclass).checked) {
+                    elems[i].classList.remove("inv");
+                }else {
+                    elems[i].classList.add("inv");
+                }
+            }
+        }
+    }
+    </script>
+    """
+    for mtype in lm.LogType:
+        mclass = str(mtype)[8:]
+        checked = ""
+        if mtype in lm.LOGGING_LEVELS.get("admin_panel"):
+            checked = " checked"
+        html += f"<label class='log {mclass}'>{mclass}<input type='checkbox' id='{mclass}'{checked} onchange='filter(\"{mclass}\");'></label>\n"
+    html += "<br><br>"
+    html += "\n".join(["<div class='log "+str(mtype)[8:]+"'>"+t+" <div class='log_msg'>"+msg+"</div></div>" for t, msg, mtype in logs])
+    html += "<script>\n"
+    for mtype in lm.LogType:
+        mclass = str(mtype)[8:]
+        html += f"filter('{mclass}');\n"
+    html += "</script>"
+    html += "</body></html>"
+    return web.Response(text=html, content_type='text/html')
 
 async def login(request):
     query = await request.post()
@@ -225,6 +263,7 @@ async def login(request):
                 ip_is_trusted = True
                 break
     if not ip_is_trusted:
+        lm.log("IP blocked (not in Whitelist) login from", ip, msg_type=lm.LogType.Login)
         resp = web.Response(text="IP address is not trusted!", status=401, content_type="text/html")
         resp.cookies["session"] = ""
         return resp
@@ -232,6 +271,7 @@ async def login(request):
         count, tstamp = sus_ips.get(ip)
         t = min((3**max(0, count-2))-1, 60) - (datetime.now().timestamp() - tstamp)
         if t > 0:
+            lm.log("IP blocked (too many trys) login from", ip, msg_type=lm.LogType.Login)
             resp = web.Response(text="To many login requests, try later", status=429, content_type="text/html")
             resp.cookies["session"] = ""
             return resp
@@ -246,9 +286,10 @@ async def login(request):
         cookie = __create_session_key()
         resp.cookies["session"] = cookie
         sessions.append(cookie)
-        print('\033[95m', "ADMIN login from:", ip, '\033[0m')
+        lm.log("Successfull login from", ip, msg_type=lm.LogType.Login)
         return resp
     else:
+        lm.log("Failed login from", ip, msg_type=lm.LogType.Login)
         resp = web.Response(text="Wrong Password!", status=401, content_type="text/html")
         resp.cookies["session"] = ""
         return resp

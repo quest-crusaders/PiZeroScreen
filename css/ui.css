@@ -30,12 +30,52 @@ li a:hover {
     margin: 0;
 }
 
+.active {
+    background-color: #004;
+}
+
 .filter {
     display: none;
 }
 
-.active {
-    background-color: #004;
+.inv {
+    display: none;
+}
+
+.log {
+    padding: 5px;
+    border-radius: 5px;
+    margin: 3px;
+}
+
+.SystemInfo {
+    background-color: #550e9c;
+}
+.Login {
+    background-color: #8c5029;
+}
+.ScreenLogin {
+    background-color: #022e75;
+}
+.ScreenInfoUpdated {
+    background-color: #036c00;
+}
+.Error{
+    background-color: #800000;
+}
+.DataUpdated{
+    background-color: #66750a;
+}
+.DEFAULT{
+    background-color: #555555;
+}
+
+div.log div.log_msg {
+    background-color: #191919;
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 3px;
+    width: auto;
 }
 
 div.centered {

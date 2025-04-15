@@ -8,6 +8,7 @@ from threading import Thread
 import data_management as dm
 import http_handler as hh
 import admin_handler as ah
+import logging_manager as lm
 
 import warnings
 
@@ -38,6 +39,7 @@ app.add_routes([
                 web.post("/admin/screens", ah.post_screen_layout),
                 web.post("/admin/warning", ah.post_warning),
                 web.post("/admin/msg_of_the_day", ah.post_msg_of_the_day),
+                web.get("/admin/logs", ah.get_logs),
                 web.get("/admin/screens", ah.get_screens),
                 web.get("/admin", ah.get_login),
                 web.get("/admin/logout", ah.logout),
@@ -62,7 +64,7 @@ def data_update_loop():
             requests.get("http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port"))
             continue
         if msg_of_the_day != dm.msg_of_the_day:
-            print('\033[93m', "Updating Screens Message", '\033[0m')
+            lm.log("Updating Screens Message", msg_type=lm.LogType.ScreenInfoUpdated)
             msg_of_the_day = dm.msg_of_the_day
             my_data = {"id": "msg_of_the_day", "html": msg_of_the_day}
             for ws in hh.CLIENTS:
@@ -88,15 +90,15 @@ def data_update_loop():
                     if not update.__contains__(ws):
                         update.append(ws)
             if len(update) > 0:
-                print('\033[93m', "Updating Screens at", L, '\033[0m')
+                lm.log("Updating Screens at", L, msg_type=lm.LogType.ScreenInfoUpdated)
             for ws in update:
                 asyncio.run_coroutine_threadsafe(hh.send_data(ws), LOOP)
 
 
 if __name__ == '__main__':
     admin_url = "http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port") + "/admin"
-    print('\033[95m', "STARTED AT:", dm.get_timestamp(), '\033[0m')
-    print('\033[95m', "Visit Admin Panel at:", admin_url, '\033[0m')
+    lm.log("STARTED AT:", dm.get_timestamp(), msg_type=lm.LogType.SystemInfo)
+    lm.log("Visit Admin Panel at:", admin_url, msg_type=lm.LogType.SystemInfo)
     update_thread = Thread(target=data_update_loop)
     update_thread.daemon = True
     update_thread.start()
