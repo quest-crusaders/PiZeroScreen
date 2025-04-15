@@ -103,4 +103,4 @@ if __name__ == '__main__':
     update_thread = Thread(target=data_update_loop)
     update_thread.daemon = True
     update_thread.start()
-    web.run_app(app, port=int(dm.config.get("server", "port")), host=dm.config.get("server", "host"))
+    web.run_app(app, port=int(dm.config.get("server", "port")), host=dm.config.get("server", "host"),print="")
