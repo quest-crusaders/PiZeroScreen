@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from configparser import ConfigParser
 import random
 import requests
+import logging_manager as lm
 
 ID_LENGTH = 8
 DATA_COLUMNS = ["event", "description", "type", "start", "duration", "location"]
@@ -37,6 +38,7 @@ def __create_id():
 def load_data():
     global df_events, df_prefab
     config["admin"] = {"password": "password123", "trusted_ips": "127.0.0.1"}
+    config["logging"] = {"level": "default", "log_logins": "True", "timestamp": "True"}
     config["server"] = {"host": "127.0.0.1", "port": "8080"}
     config["post_api"] = {"id": "test", "url": ""}
 
@@ -58,6 +60,9 @@ def load_data():
 
         with open("./data/config.ini", "w") as f:
             config.write(f)
+        print('\033[91m', "No config found! creating default.", '\033[0m')
+        exit(1)
+    lm.CONF = config["logging"]
 
     if os.path.exists("./data/events.csv"):
         df = pd.read_csv("./data/events.csv")
@@ -99,7 +104,7 @@ def post_update():
     try:
         requests.post(config.get("post_api", "url"), json=json_str)
     except requests.exceptions.RequestException:
-        print('\033[91m', "Failed to post event update too Website", '\033[0m')
+        lm.log("Failed to post event update too Website", msg_type=lm.LogType.Error)
 
 
 def check_login(pw):
@@ -108,10 +113,12 @@ def check_login(pw):
 def reset_prefab():
     global df_prefab
     df_prefab = df_events.copy()
+    lm.log("Prefab reset", msg_type=lm.LogType.DataUpdated)
 
 def update_table():
     global df_events
     df_events = df_prefab.copy()
+    lm.log("Database Updated from prefab", msg_type=lm.LogType.DataUpdated)
     with open("./data/events.csv", "w") as file:
         df_events[DATA_COLUMNS].to_csv(file, index=False)
     post_update()
@@ -171,20 +178,26 @@ def get_locations():
     return df_events["location"].unique().tolist()
 
 def edit_event(id, name, description, type, start, duration, location):
+    if len(df_prefab.loc[df_prefab["id"] == id].index) == 0:
+        lm.log("Event editing failed:", id, "not found!", msg_type=lm.LogType.DataUpdated)
+        return
     index = df_prefab.loc[df_prefab["id"] == id].index[0]
     df_prefab.iloc[int(index)] = (id, name, description, type, start, duration, location)
+    lm.log("Event edited:", id, name, description, type, start, duration, location, msg_type=lm.LogType.DataUpdated)
 
 def delete_event(id):
     try:
         index = df_prefab.loc[df_prefab["id"] == id].index[0]
         df_prefab.drop(index, inplace=True)
+        lm.log("Event deleted:", id, msg_type=lm.LogType.DataUpdated)
     except IndexError:
-        pass
+        lm.log("Event deleting failed:", id, "not found!", msg_type=lm.LogType.DataUpdated)
 
 def add_event(name, description, type, start, duration, location):
     global df_prefab
+    id = __create_id()
     data = {
-        "id": [__create_id()],
+        "id": [id],
         "event": [name],
         "description": [description],
         "type": [type],
@@ -194,6 +207,7 @@ def add_event(name, description, type, start, duration, location):
     }
     df_prefab = pd.concat([df_prefab, pd.DataFrame(data)])
     df_prefab.reindex()
+    lm.log("Event added:", id, name, description, type, start, duration, location, msg_type=lm.LogType.DataUpdated)
 
 
 load_data()

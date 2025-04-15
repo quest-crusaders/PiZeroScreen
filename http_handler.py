@@ -2,6 +2,7 @@ from aiohttp import web, WSMsgType
 import os
 import json
 import data_management as dm
+import logging_manager as lm
 
 CLIENTS = {}
 layout_map = {}
@@ -57,7 +58,7 @@ async def websocket_handler(request):
     screen_id = ""
     async for msg in ws:
         if msg.type == WSMsgType.TEXT:
-            print('\033[96m', "adding screen:", msg.data, '\033[0m')
+            lm.log("adding screen:", msg.data, msg_type=lm.LogType.ScreenLogin)
             if msg.data == 'close':
                 await ws.close()
             else:
@@ -73,7 +74,7 @@ async def websocket_handler(request):
                 await ws.send_str(json.dumps(my_data))
                 await send_data(ws)
     if screen_id != "":
-        print('\033[94m', 'connection closed:', screen_id, '\033[0m')
+        lm.log('connection closed:', screen_id, msg_type=lm.LogType.ScreenLogin)
     try:
         del CLIENTS[ws]
     except KeyError:
