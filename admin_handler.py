@@ -156,9 +156,28 @@ async def get_screens(request):
         html += "<tr><td>" + S + "</td>"
         html += "<td><select name='"+S+"_layout' value='"+hh.layout_map.get(S)+"'>"+make_layout_opt(hh.layout_map.get(S))+"</select></td>"
         html += "<td><select name='"+S+"_location' value='"+hh.location_map.get(S)+"'>"+make_location_opt(hh.location_map.get(S))+"</select></td>"
+        html += "<td><a class='preview' href='/?mac="+S+"' target='_blank'>preview "+S+"</a></td>"
         html += "</tr>\n"
     html += "</table>\n<label>force Update </label><input type='checkbox' name='force'><br><input type='submit' value='commit changes'></form>\n"
+    html += "<form action='/admin/purge_screens' method='post'><input type='submit' value='remove disconnected'></form>\n"
     return web.Response(text=html, content_type='text/html')
+
+async def post_purge_screens(request):
+    if not check_auth(request):
+        return web.Response(text="Unauthorized", status=401, content_type="text/html")
+    lm.log("Removing disconnected screens", msg_type=lm.LogType.DataUpdated)
+    _ = await request.post()
+    all_screens = list(hh.layout_map.keys())
+    active_screens = [s for s in hh.layout_map.keys() if hh.layout_map.get(s) in hh.CLIENTS]
+    for S in all_screens:
+        if S not in active_screens:
+            hh.layout_map.pop(S)
+            hh.location_map.pop(S)
+    with open("./data/layouts.json", "w+") as f:
+        f.write(json.dumps(hh.layout_map))
+    with open("./data/locations.json", "w+") as f:
+        f.write(json.dumps(hh.location_map))
+    return web.HTTPFound("/admin/screens")
 
 async def post_screen_layout(request):
     if not check_auth(request):

@@ -30,6 +30,10 @@ li a:hover {
     margin: 0;
 }
 
+a.preview {
+    color: #478fff;
+}
+
 .active {
     background-color: #004;
 }

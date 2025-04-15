@@ -39,6 +39,7 @@ app.add_routes([
                 web.post("/admin/screens", ah.post_screen_layout),
                 web.post("/admin/warning", ah.post_warning),
                 web.post("/admin/msg_of_the_day", ah.post_msg_of_the_day),
+                web.post("/admin/purge_screens", ah.post_purge_screens),
                 web.get("/admin/logs", ah.get_logs),
                 web.get("/admin/screens", ah.get_screens),
                 web.get("/admin", ah.get_login),
