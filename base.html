@@ -11,7 +11,10 @@
 </body>
 <script>
 const urlParams = new URLSearchParams(window.location.search);
-const myMAC = urlParams.get('mac');
+var myMAC = urlParams.get('mac');
+if (urlParams.get('preview') === "true") {
+    myMAC += ":preview"
+}
 
 // Create WebSocket connection.
 let socket = null

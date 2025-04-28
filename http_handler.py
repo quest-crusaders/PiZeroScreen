@@ -5,6 +5,7 @@ import data_management as dm
 import logging_manager as lm
 
 CLIENTS = {}
+preview_list = []
 layout_map = {}
 location_map = {}
 layouts = {
@@ -34,15 +35,17 @@ def css(request):
 
 
 async def send_data(ws):
+    preview = ws in preview_list
     loc = location_map.get(CLIENTS.get(ws))
+    lm.log("Sending Data to screen at", loc, preview)
 
-    event, desc, _, _ = dm.get_current_event(loc)
+    event, desc, _, _ = dm.get_current_event(loc, prefab=preview)
     my_data = {"id": "event_name", "html": event}
     await ws.send_str(json.dumps(my_data))
     my_data = {"id": "event_desc", "html": desc}
     await ws.send_str(json.dumps(my_data))
 
-    event, desc, start_str, _ = dm.get_next_event(loc)
+    event, desc, start_str, _ = dm.get_next_event(loc, prefab=preview)
     html = '<h3>'+event+'</h3>\n'
     html += '<p>Starting at: ' + start_str[-5:].replace("-", ":") + '</p>\n'
     my_data = {"id": "event_next", "html": html}
@@ -63,20 +66,27 @@ async def websocket_handler(request):
                 return ws
             else:
                 screen_id = msg.data
+                if screen_id.endswith(":preview"):
+                    screen_id = screen_id[:-8]
+                    preview_list.append(ws)
                 CLIENTS[ws] = screen_id
                 if location_map.get(screen_id) is None:
                     location_map[screen_id] = "default"
                 if layout_map.get(screen_id) is None:
                     layout_map[screen_id] = "default"
-                lm.log("adding screen:", screen_id, msg_type=lm.LogType.ScreenLogin)
+                lm.log("adding screen:", msg.data, msg_type=lm.LogType.ScreenLogin)
                 html = layouts.get(layout_map.get(screen_id, "default"))
                 my_data = {"id": "body", "html": html}
                 await ws.send_str(json.dumps(my_data))
                 await send_data(ws)
     if screen_id != "":
-        lm.log('connection closed:', screen_id, msg_type=lm.LogType.ScreenLogin)
+        lm.log('connection closed:', msg.data, msg_type=lm.LogType.ScreenLogin)
     try:
         del CLIENTS[ws]
     except KeyError:
+        pass
+    try:
+        preview_list.remove(screen_id)
+    except ValueError:
         pass
     return ws
