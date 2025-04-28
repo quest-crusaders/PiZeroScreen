@@ -60,7 +60,7 @@ def data_update_loop():
         next_events[L] = dm.get_next_event(L)
     while True:
         loop_count += 1
-        sleep(1)
+        sleep(30)
         if LOOP is None:
             requests.get("http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port"))
             continue
@@ -80,7 +80,7 @@ def data_update_loop():
                 for ws in hh.CLIENTS:
                     if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
                         continue
-                    if not update.__contains__(ws):
+                    if not ws in update and not ws in hh.preview_list:
                         update.append(ws)
             if next_event != dm.get_next_event(L):
                 next_event = dm.get_next_event(L)
@@ -88,7 +88,7 @@ def data_update_loop():
                 for ws in hh.CLIENTS:
                     if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
                         continue
-                    if not update.__contains__(ws):
+                    if not ws in update and not ws in hh.preview_list:
                         update.append(ws)
             if len(update) > 0:
                 lm.log("Updating Screens at", L, msg_type=lm.LogType.ScreenInfoUpdated)

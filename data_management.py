@@ -141,6 +141,7 @@ def get_current_event(location, *, prefab=False):
     else:
         df = df_events
     df = df[df["location"] == location]
+    df = df.sort_values(by="start")
     df.reset_index(inplace=True)
     if len(df) == 0:
         return "", "", "", None
@@ -162,6 +163,7 @@ def get_next_event(location, *, prefab=False):
     else:
         df = df_events
     df = df[df["location"] == location]
+    df = df.sort_values(by="start")
     df.reset_index(inplace=True)
     if len(df) == 0:
         return "", "", "", None

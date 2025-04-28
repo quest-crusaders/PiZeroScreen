@@ -21,7 +21,6 @@
       setTimeout(loop, 20);
       msg.innerText = msg.innerText.replaceAll("\n", " ");
       let ref_width = msg.parentElement.parentElement.offsetWidth-(2*side_panel.offsetWidth);
-      console.log(msg.offsetWidth+"/"+ref_width.toString())
       if (is_scrolling){
         if (msg.offsetWidth < ref_width){
           offset = 0;

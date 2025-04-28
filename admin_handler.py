@@ -156,7 +156,7 @@ async def get_screens(request):
         html += "<tr><td>" + S + "</td>"
         html += "<td><select name='"+S+"_layout' value='"+hh.layout_map.get(S)+"'>"+make_layout_opt(hh.layout_map.get(S))+"</select></td>"
         html += "<td><select name='"+S+"_location' value='"+hh.location_map.get(S)+"'>"+make_location_opt(hh.location_map.get(S))+"</select></td>"
-        html += "<td><a class='preview' href='/?mac="+S+"' target='_blank'>preview "+S+"</a></td>"
+        html += "<td><a class='preview' href='/?mac="+S+"&preview=true' target='_blank'>preview "+S+"</a></td>"
         html += "</tr>\n"
     html += "</table>\n<label>force Update </label><input type='checkbox' name='force'><br><input type='submit' value='commit changes'></form>\n"
     html += "<form action='/admin/purge_screens' method='post'><input type='submit' value='remove disconnected'></form>\n"
