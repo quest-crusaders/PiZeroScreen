@@ -3,6 +3,7 @@ import os
 import json
 import data_management as dm
 import logging_manager as lm
+import re
 
 CLIENTS = {}
 preview_list = []
@@ -37,21 +38,32 @@ def css(request):
 async def send_data(ws):
     preview = ws in preview_list
     loc = location_map.get(CLIENTS.get(ws))
+    loc_prefix = re.compile("^\\[.*]")
     lm.log("Sending Data to screen at", loc, preview)
 
-    event, desc, _, _ = dm.get_current_event(loc, prefab=preview)
+    event, desc, start_str, duration = dm.get_current_event(loc, prefab=preview)
     my_data = {"id": "event_name", "html": event}
     await ws.send_str(json.dumps(my_data))
     my_data = {"id": "event_desc", "html": desc}
     await ws.send_str(json.dumps(my_data))
+    my_data = {"id": "event_start", "html": start_str[-5:].replace("-", ":")}
+    await ws.send_str(json.dumps(my_data))
+    my_data = {"id": "event_len", "html": str(duration)}
+    await ws.send_str(json.dumps(my_data))
 
-    event, desc, start_str, _ = dm.get_next_event(loc, prefab=preview)
-    html = '<h3>'+event+'</h3>\n'
-    html += '<p>Starting at: ' + start_str[-5:].replace("-", ":") + '</p>\n'
-    my_data = {"id": "event_next", "html": html}
+    event, desc, start_str, duration = dm.get_next_event(loc, prefab=preview)
+    my_data = {"id": "event_next_name", "html": event}
+    await ws.send_str(json.dumps(my_data))
+    my_data = {"id": "event_next_desc", "html": desc}
+    await ws.send_str(json.dumps(my_data))
+    my_data = {"id": "event_next_start", "html": start_str[-5:].replace("-", ":")}
+    await ws.send_str(json.dumps(my_data))
+    my_data = {"id": "event_next_len", "html": str(duration)}
     await ws.send_str(json.dumps(my_data))
 
     my_data = {"id": "msg_of_the_day", "html": dm.msg_of_the_day}
+    await ws.send_str(json.dumps(my_data))
+    my_data = {"id": "location", "html": loc_prefix.sub("", loc)}
     await ws.send_str(json.dumps(my_data))
 
 async def websocket_handler(request):
