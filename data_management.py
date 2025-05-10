@@ -85,7 +85,7 @@ def load_data():
             "type": ["default" for _ in range(sample_num)],
             "start": [get_timestamp(add=10*i) for i in range(sample_num)],
             "duration": [30 for _ in range(sample_num)],
-            "location": ["stage"+str(i%6) for i in range(sample_num)]
+            "location": ["["+"abcdefghijklmnopqrstuvwxyz"[i%6]+"]stage"+str(i%6) for i in range(sample_num)]
         }
         df = pd.DataFrame(data)
     df_events = df.copy()
