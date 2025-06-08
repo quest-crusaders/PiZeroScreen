@@ -92,13 +92,13 @@ def load_data():
     df_prefab = df.copy()
 
 def post_update():
-    global df_events
+    global df_events, msg_of_the_day
     if config.get("post_api", "url") == "":
         return
     csv = df_events[DATA_COLUMNS].to_csv(index=False)
     json_str = json.dumps({
         "event": config.get("post_api", "id"),
-        "message": "TODO, just a string to display",
+        "message": msg_of_the_day,
         "data": csv,
     })
     try:
