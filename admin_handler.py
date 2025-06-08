@@ -254,7 +254,7 @@ async def get_logs(request):
             checked = " checked"
         html += f"<label class='log {mclass}'>{mclass}<input type='checkbox' id='{mclass}'{checked} onchange='filter(\"{mclass}\");'></label>\n"
     html += "<br><br>"
-    html += "\n".join(["<div class='log "+str(mtype)[8:]+"'>"+t+" <div class='log_msg'>"+msg+"</div></div>" for t, msg, mtype in logs])
+    html += "\n".join(["<div class='log "+str(mtype)[8:]+"'>"+t+" <div class='log_msg'>"+msg.replace("\n", "<br>")+"</div></div>" for t, msg, mtype in logs])
     html += "<script>\n"
     for mtype in lm.LogType:
         mclass = str(mtype)[8:]
