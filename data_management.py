@@ -102,7 +102,9 @@ def post_update():
         "data": csv,
     })
     try:
-        requests.post(config.get("post_api", "url"), json=json_str)
+        res = requests.post(config.get("post_api", "url"), json=json_str)
+        if res.status_code != 200:
+            lm.log("Failed to post event update too Website\n", res.text, msg_type=lm.LogType.Error)
     except requests.exceptions.RequestException:
         lm.log("Failed to post event update too Website", msg_type=lm.LogType.Error)
 
