@@ -149,7 +149,7 @@ def get_current_event(location, *, prefab=False):
         return "", "", "", None
     index = 0
     tstamp = get_timestamp()
-    while index < len(df) and df.iloc[index]["start"] < tstamp:
+    while index < len(df) and df.iloc[index]["start"] <= tstamp:
         index += 1
     index -= 1
     if index < 0:
@@ -171,7 +171,7 @@ def get_next_event(location, *, prefab=False):
         return "", "", "", None
     index = 0
     tstamp = get_timestamp()
-    while index < len(df) and df.iloc[index]["start"] < tstamp:
+    while index < len(df) and df.iloc[index]["start"] <= tstamp:
         index += 1
     if index == len(df):
         return "", "", "", None
