@@ -75,5 +75,5 @@ The Config-Block can set the URL at witch to post, as well as the id-String to p
 ```
 [post_api]
 id = test
-url = https://example.com/post
+url = https://example.com/update/<secret>
 ```
