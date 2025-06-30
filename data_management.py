@@ -64,12 +64,12 @@ def load_data():
         exit(1)
     lm.CONF = config["logging"]
 
-    if os.path.exists("./data/events.csv"):
-        df = pd.read_csv("./data/events.csv")
+    if os.path.exists("./data/timetable.csv"):
+        df = pd.read_csv("./data/timetable.csv")
         for col in DATA_COLUMNS:
             if col not in df.columns:
                 print('\033[91m', "Timetable is missing a Data: no", col, "Colum found!", '\033[0m')
-                print('\033[91m', "Aborting Setup! Please fix or delete 'data/events.csv'!", '\033[0m')
+                print('\033[91m', "Aborting Setup! Please fix or delete 'data/timetable.csv'!", '\033[0m')
                 exit(1)
         if not "id" in df.columns:
             df["id"] = pd.Series([__create_id() for _ in range(len(df))], index=df.index)
@@ -121,7 +121,7 @@ def update_table():
     global df_events
     df_events = df_prefab.copy()
     lm.log("Database Updated from prefab", msg_type=lm.LogType.DataUpdated)
-    with open("./data/events.csv", "w") as file:
+    with open("./data/timetable.csv", "w") as file:
         df_events[DATA_COLUMNS].to_csv(file, index=False)
     post_update()
 
