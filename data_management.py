@@ -14,17 +14,20 @@ df_events: pd.DataFrame = None
 df_prefab: pd.DataFrame = None
 msg_of_the_day = ""
 
-def null_proof(data):
-    if data is None:
-        return ""
-    elif str(data) == "nan":
-        return ""
-    else:
-        return str(data)
 
 def get_timestamp(*, add=0):
     time = datetime.now() + timedelta(minutes=add)
     return time.strftime("%Y-%m-%d_%H:%M")
+
+def to_timestamp(time):
+    return time.strftime("%Y-%m-%d_%H:%M")
+
+def from_timestamp(stamp):
+    date, time = stamp.split("_")
+    year, month, day = date.split("-")
+    hour, minute = time.split(":")
+    return datetime(int(year), int(month), int(day), int(hour), int(minute))
+
 
 def __create_id():
     key = "".join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(ID_LENGTH)])
@@ -124,6 +127,39 @@ def update_table():
     with open("./data/events.csv", "w") as file:
         df_events[DATA_COLUMNS].to_csv(file, index=False)
     post_update()
+
+
+def get_public_table_csv(time_filter=None, location_filter=None):
+    df = df_events.copy()
+    df.sort_values(by="start", inplace=True)
+    if location_filter is not None:
+        df = df[df["location"].str.contains(location_filter)]
+    if time_filter is not None:
+        if time_filter == "no_past":
+            def filter(event):
+                event["is_active"] = to_timestamp(from_timestamp(event["start"]) + timedelta(minutes=int(event["duration"]))) >= get_timestamp()
+                return event
+            df = df.apply(filter, axis=1)
+            df = df[df["is_active"] == True]
+        if time_filter == "future_only":
+            df = df[df["start"] >= get_timestamp()]
+    return df[DATA_COLUMNS].to_csv(index=False)
+
+def get_public_table_html(time_filter=None, location_filter=None):
+    df = df_events.copy()
+    df.sort_values(by="start", inplace=True)
+    if location_filter is not None:
+        df = df[df["location"].str.contains(location_filter)]
+    if time_filter is not None:
+        if time_filter == "no_past":
+            def filter(event):
+                event["is_active"] = to_timestamp(from_timestamp(event["start"]) + timedelta(minutes=int(event["duration"]))) >= get_timestamp()
+                return event
+            df = df.apply(filter, axis=1)
+            df = df[df["is_active"] == True]
+        if time_filter == "future_only":
+            df = df[df["start"] >= get_timestamp()]
+    return df[DATA_COLUMNS].to_html(index=False)
 
 
 def get_time_table(*, prefab=False, location: None|str=None):
