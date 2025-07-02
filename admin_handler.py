@@ -83,6 +83,7 @@ async def get_timetable(request):
                     str += '"' + col + '",'
                 }
                 str = str.substring(0, str.length - 1);
+                str = str.replaceAll("'", "&#39;")
                 row.children[0].innerHTML = "<button onclick='edit("+str+");'>EDIT</button>";
             }
         </script>
