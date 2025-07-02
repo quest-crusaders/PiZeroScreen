@@ -12,7 +12,8 @@
 <script>
 const urlParams = new URLSearchParams(window.location.search);
 var myMAC = urlParams.get('mac');
-if (urlParams.get('preview') === "true") {
+var debug = urlParams.get('preview') === "true"
+if (debug) {
     myMAC += ":preview"
 }
 
@@ -21,6 +22,9 @@ let socket = null
 
 function init(socket) {socket.send(myMAC);}
 function receive(event) {
+    if (debug) {
+        console.log(event.data);
+    }
     const data = JSON.parse(event.data);
 
     let elem = null;
