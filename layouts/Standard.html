@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <style>
+      /* Global styles */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #eac88a;
+      }
+
+      /* Main content area styles */
+      main {
+        max-width: calc(100vw - 200px); /* Set maximum width to 100% of viewport width minus 200px */
+        margin: 40px auto; /* Add margin to top and bottom, and center horizontally */
+        padding: 20px; /* Add padding to content area */
+        background-color: #ffffff; /* Set background color to white */
+        border: 1px solid #ddd; /* Add border with light gray color */
+        border-radius: 10px; /* Add rounded corners */
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Add subtle shadow effect */
+        display: flex; /* Enable flexbox layout */
+        flex-wrap: wrap; /* Allow content to wrap to next line */
+        justify-content: space-around; /* Distribute content horizontally with equal spacing */
+      }
+
+      /* Heading styles */
+      h2 {
+        color: #333; /* Set text color to dark gray */
+        margin-top: 20px; /* Add margin to top */
+        flex-basis: 100%; /* Make headings take up full width */
+      }
+
+      /* Subheading styles */
+      h3 {
+        color: #666; /* Set text color to medium gray */
+      }
+
+      /* Paragraph styles */
+      p {
+        color: #888; /* Set text color to light gray */
+      }
+
+      /* Iframe styles */
+      iframe {
+        border: none; /* Remove border */
+        width: calc(55vw - 100px); /* Set width to 50% of viewport width minus 100px */
+        height: calc(80vh - 5px); /* Set height to 50% of viewport height minus 100px */
+        margin-top: 20px; /* Add margin to top */
+        flex-basis: 100%; /* Make iframes take up full width */
+      }
+
+      /* Event section styles */
+      .event-section {
+        flex-basis: 15%; /* Make event sections take up 45% of available width */
+        margin: 20px; /* Add margin to top and bottom */
+      }
+
+      /* General section styles */
+      .general-section {
+        flex-basis: 5%; /* Make general section take up 20% of available width */
+        margin: 20px; /* Add margin to top and bottom */
+      }
+    </style>
+  </head>
+  <body>
+    <header></header>
+    <main>
+      <!-- Schedule section with iframe -->
+      <div class="event-section">
+        <h2>Schedule:</h2>
+        <iframe src='https://timetable.kitao.eu/'> title="timetable" </iframe> <!-- link to timetable -->
+      </div>
+
+      <!-- Current Event section -->
+      <div class="event-section">
+        <h2>Current Event:</h2>
+        <h3 id="event_name"></h3>
+        <p id="event_desc"></p>
+        <p id="event_start"></p>
+      </div>
+
+      <!-- Next Event section -->
+      <div class="event-section">
+        <h2>Next Event:</h2>
+        <h3 id="event_next_name"></h3>
+        <p id="event_next_desc"></p>
+        <p id="event_next_start"></p>
+      </div>
+
+      <!-- General section -->
+      <div class="general-section">
+        <h2>General:</h2>
+        <p id="location"></p>
+        <p id="msg_of_the_day" class="one_line"></p>  
+      </div>     
+    </main>
+    <footer></footer>
+  </body>
+</html>
