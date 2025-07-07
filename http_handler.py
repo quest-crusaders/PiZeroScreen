@@ -5,12 +5,50 @@ import data_management as dm
 import logging_manager as lm
 import re
 
+
+class LayoutConfig(object):
+
+    current_event: bool
+    next_event: bool
+    locations: int
+    msg_otd: bool
+
+    def __init__(self, current_event= True, next_event=True, locations=1, msg_otd=True):
+        if locations <= 0:
+            raise ValueError("location Count must be positive!")
+        self.current_event = current_event
+        self.next_event = next_event
+        self.locations = locations
+        self.msg_otd = msg_otd
+
+def layout_conf_reader(line: str) -> LayoutConfig:
+    if not (line.startswith("<!-- LayoutConfig: ") and line.endswith(" -->")):
+        return LayoutConfig()
+    line = line[19:-4]
+    parameter = line.split(";")
+    conf = LayoutConfig()
+
+    # check bool parameter
+    conf.current_event = "current_event" in parameter
+    conf.next_event = "next_event" in parameter
+    conf.msg_otd = "msg_otd" in parameter
+
+    # check other parameter
+    for P in parameter:
+        if P.startswith("locations="):
+            conf.locations = int(P[10:][1])
+
+    return conf
+
 CLIENTS = {}
 preview_list = []
 layout_map = {}
 location_map = {}
 layouts = {
     "default": ''
+}
+layout_conf = {
+    "default": LayoutConfig()
 }
 def __load_layouts():
     global layouts, layout_map, location_map
@@ -19,6 +57,7 @@ def __load_layouts():
     for F in files:
         html = open("layouts/"+F+".html").read()
         layouts[F] = html
+        layout_conf[F] = layout_conf_reader(html.split("\n")[0])
     try:
         location_map = json.load(open("./data/locations.json"))
         layout_map = json.load(open("./data/layouts.json"))
