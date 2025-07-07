@@ -28,6 +28,11 @@ def from_timestamp(stamp):
     hour, minute = time.split(":")
     return datetime(int(year), int(month), int(day), int(hour), int(minute))
 
+def shift_timestamp(timestamp, minutes):
+    dt = from_timestamp(timestamp)
+    dt += timedelta(minutes=minutes)
+    return to_timestamp(dt)
+
 
 def __create_id():
     key = "".join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(ID_LENGTH)])
@@ -163,12 +168,17 @@ def get_public_table_html(time_filter=None, location_filter=None):
 
 
 def get_time_table(*, prefab=False, location: None|str=None):
+    def filter(event):
+        event["filter"] = event["location"].lower().__contains__(location.lower())
+        return event
     if prefab:
         df = df_prefab.copy()
     else:
         df = df_events.copy()
     if location is not None:
-        df = df[df["location"] == location]
+        df = df.apply(filter, axis=1)
+        df = df[df["filter"] == True]
+    df = df[DATA_COLUMNS]
     df.sort_values(by="start", inplace=True)
     return df.to_html(index=False)
 
