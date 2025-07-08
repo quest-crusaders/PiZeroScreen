@@ -178,7 +178,7 @@ def get_time_table(*, prefab=False, location: None|str=None):
     if location is not None:
         df = df.apply(filter, axis=1)
         df = df[df["filter"] == True]
-    df = df[DATA_COLUMNS]
+    df = df[["id"]+DATA_COLUMNS]
     df.sort_values(by="start", inplace=True)
     return df.to_html(index=False)
 
