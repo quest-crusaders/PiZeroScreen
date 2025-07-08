@@ -1,0 +1,69 @@
+<!-- LayoutConfig: current_event;next_event;msg_otd;locations=2 -->
+<link rel="stylesheet" href="/generall.css">
+<table style="width: 100%"><tr><td style="width: 50%">
+    <div class="sign">
+        <h1 id="location"></h1>
+    </div>
+</td><td style="width: 50%">
+    <div class="sign">
+        <h1 id="location_1"></h1>
+    </div>
+</td></tr><tr><td>
+
+    <h2 style="display: inline-block;">Current Event:</h2>
+    <h2 style="display: inline-block;" id="event_name"></h2><br>
+    <label id="event_start"></label><label> - </label><label id="event_end"></label>
+    <p id="event_desc"></p>
+</td><td>
+
+    <h2 style="display: inline-block;">Current Event:</h2>
+    <h2 style="display: inline-block;" id="event_name_1"></h2><br>
+    <label id="event_start_1"></label><label> - </label><label id="event_end_1"></label>
+    <p id="event_desc_1"></p>
+</td></tr><tr><td>
+    <h2 style="display: inline-block;">Next Event:</h2>
+    <h2 style="display: inline-block;" id="event_next_name"></h2><br>
+    <label id="event_next_start"></label><label> - </label><label id="event_next_end"></label>
+    <p id="event_next_desc"></p>
+</td><td>
+    <h2 style="display: inline-block;">Next Event:</h2>
+    <h2 style="display: inline-block;" id="event_next_name_1"></h2><br>
+    <label id="event_next_start_1"></label><label> - </label><label id="event_next_end_1"></label>
+    <p id="event_next_desc_1"></p>
+</td></tr></table>
+
+<div class="msg_otd">
+  <p id="msg_of_the_day" class="msg_otd"></p>
+</div>
+  <script>
+    var msg = document.getElementById("msg_of_the_day");
+    var offset = 0;
+    var is_scrolling = false;
+
+    var text_loop_len = 100;
+
+    setTimeout(loop, 1000);
+
+    function loop(){
+      setTimeout(loop, 20);
+      msg.innerText = msg.innerText.replaceAll("\n", " ");
+      let ref_width = msg.parentElement.offsetWidth;
+      if (is_scrolling){
+        if (msg.offsetWidth < ref_width){
+          offset = 0;
+          is_scrolling = false;
+          msg.style = "";
+        }else {
+          offset++;
+          if (offset > msg.offsetWidth){
+            offset = -(window.innerWidth);
+          }
+          msg.style = "transform: translate("+(-offset).toString()+"px, 0)";
+        }
+      }else {
+        if (msg.offsetWidth >= ref_width) {
+          is_scrolling = true;
+        }
+      }
+    }
+  </script>

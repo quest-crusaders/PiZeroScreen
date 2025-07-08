@@ -42,8 +42,8 @@
           msg.style = "";
         }else {
           offset++;
-          if (offset > msg.offsetWidth + (window.innerWidth/2)){
-            offset = -(window.innerWidth/2);
+          if (offset > msg.offsetWidth){
+            offset = -(window.innerWidth);
           }
           msg.style = "transform: translate("+(-offset).toString()+"px, 0)";
         }
