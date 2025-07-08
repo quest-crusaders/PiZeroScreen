@@ -1,0 +1,60 @@
+body {
+    overflow: hidden;
+    text-align: center;
+    background-color: var(--main);
+    padding: 10px 0px;
+}
+
+h1 {
+    padding: 10px;
+}
+
+h2 {
+    margin: 0;
+}
+
+div.sign {
+    color: white;
+    background-color: var(--trim);
+    width: fit-content;
+    min-width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    border-radius: 20px;
+}
+
+div.msg_otd {
+    color: white;
+    background-color: var(--trim);
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: fit-content;
+}
+
+p.msg_otd {
+    width: max-content;
+    max-height: 1em;
+}
+
+div.current_event {
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 70%;
+    padding: 0 2%;
+}
+div.next_event {
+    overflow: hidden;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    background: var(--secundary);
+    border-radius: 20px 0px 0px 20px;
+    padding: 1% 2% 0 2%;
+}

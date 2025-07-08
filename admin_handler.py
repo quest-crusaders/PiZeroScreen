@@ -234,6 +234,8 @@ async def post_msg_of_the_day(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
     data = await request.post()
     dm.msg_of_the_day = data["msg"]
+    if dm.msg_of_the_day == " ":
+        dm.msg_of_the_day = ""
     return web.HTTPFound("/admin/messages.html")
 
 async def post_warning(request):
