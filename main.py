@@ -30,8 +30,8 @@ app.add_routes([
                 web.static('/static/', './static/'),
                 web.get('/ws', hh.websocket_handler),
 
-                web.get('/time_table.html', hh.get_table),
-                web.get('/time_table.csv', hh.get_table),
+                web.get('/timetable.html', hh.get_table),
+                web.get('/timetable.csv', hh.get_table),
 
                 web.post("/login", ah.login),
                 web.post("/admin/add_event", ah.post_add_entry),
