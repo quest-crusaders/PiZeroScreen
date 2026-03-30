@@ -83,6 +83,7 @@ async def get_timetable(request):
                     str += '"' + col + '",'
                 }
                 str = str.substring(0, str.length - 1);
+                str = str.replaceAll("'", "&#39;")
                 row.children[0].innerHTML = "<button onclick='edit("+str+");'>EDIT</button>";
             }
         </script>
@@ -141,7 +142,9 @@ async def get_screens(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
     layouts = [l for l in hh.layouts.keys()]
+    layouts.sort()
     locations = dm.get_locations()
+    locations.sort()
     screens = [s for s in hh.layout_map.keys()]
 
     def make_layout_opt(selected):
@@ -155,7 +158,16 @@ async def get_screens(request):
     for S in screens:
         html += "<tr><td>" + S + "</td>"
         html += "<td><select name='"+S+"_layout' value='"+hh.layout_map.get(S)+"'>"+make_layout_opt(hh.layout_map.get(S))+"</select></td>"
-        html += "<td><select name='"+S+"_location' value='"+hh.location_map.get(S)+"'>"+make_location_opt(hh.location_map.get(S))+"</select></td>"
+        html += "<td>"
+        for Sli in range(hh.layout_conf.get(hh.layout_map.get(S, "default")).locations):
+            suffix = ""
+            if Sli > 0:
+                suffix = f"_{Sli}"
+            loc = "default"
+            if Sli < len(hh.location_map.get(S)):
+                loc = hh.location_map.get(S)[Sli]
+            html += "<select name='"+S+"_location"+suffix+"' value='"+loc+"'>"+make_location_opt(loc)+"</select>"
+        html += "</td>"
         html += "<td><a class='preview' href='/?mac="+S+"&preview=true' target='_blank'>preview "+S+"</a></td>"
         html += "</tr>\n"
     html += "</table>\n<label>force Update </label><input type='checkbox' name='force'><br><input type='submit' value='commit changes'></form>\n"
@@ -195,11 +207,20 @@ async def post_screen_layout(request):
                 await ws.send_str(json.dumps(my_data))
                 if not update.__contains__(ws):
                     update.append(ws)
-        if data[S+"_location"] != hh.location_map.get(S):
-            hh.location_map[S] = data[S+"_location"]
-            for ws in [ws for ws in hh.CLIENTS.keys() if hh.CLIENTS.get(ws) == S]:
-                 if not update.__contains__(ws):
-                     update.append(ws)
+        for Sli in range(hh.layout_conf.get(hh.layout_map.get(S, "default")).locations):
+            while len(hh.location_map.get(S)) <= Sli:
+                hh.location_map.get(S).append("default")
+            suffix = ""
+            if Sli > 0:
+                suffix = f"_{Sli}"
+            try:
+                if data[S+"_location"+suffix] != hh.location_map.get(S)[Sli]:
+                    hh.location_map[S][Sli] = data[S+"_location"+suffix]
+                    for ws in [ws for ws in hh.CLIENTS.keys() if hh.CLIENTS.get(ws) == S]:
+                         if not update.__contains__(ws):
+                             update.append(ws)
+            except KeyError:
+                pass
         for ws in update:
             await hh.send_data(ws)
     with open("./data/layouts.json", "w+") as f:
@@ -213,6 +234,8 @@ async def post_msg_of_the_day(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
     data = await request.post()
     dm.msg_of_the_day = data["msg"]
+    if dm.msg_of_the_day == " ":
+        dm.msg_of_the_day = ""
     return web.HTTPFound("/admin/messages.html")
 
 async def post_warning(request):
@@ -254,7 +277,7 @@ async def get_logs(request):
             checked = " checked"
         html += f"<label class='log {mclass}'>{mclass}<input type='checkbox' id='{mclass}'{checked} onchange='filter(\"{mclass}\");'></label>\n"
     html += "<br><br>"
-    html += "\n".join(["<div class='log "+str(mtype)[8:]+"'>"+t+" <div class='log_msg'>"+msg+"</div></div>" for t, msg, mtype in logs])
+    html += "\n".join(["<div class='log "+str(mtype)[8:]+"'>"+t+" <div class='log_msg'>"+msg.replace("\n", "<br>")+"</div></div>" for t, msg, mtype in logs])
     html += "<script>\n"
     for mtype in lm.LogType:
         mclass = str(mtype)[8:]
@@ -321,6 +344,12 @@ async def logout(request):
         sessions.remove(cookie)
     except ValueError:
         pass
+    ip = ""
+    try:
+        ip = request.headers["X-Forwarded-For"]
+    except KeyError:
+        ip = request.remote
+    lm.log("logout from", ip, msg_type=lm.LogType.Login)
     return resp
 
 def get_login(request):

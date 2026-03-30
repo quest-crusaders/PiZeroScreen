@@ -1,9 +1,14 @@
 :root {
+    --main: #eac88a;
+    --secundary: #ffffff;
+    --trim: #733102;
+    --text: #000000;
+    /*
     --main: #8b3d8f;
     --secundary: #eb5e9d;
     --trim: #3e2461;
     --text: #ffffff;
-
+*/
     --warning-bk: #FF4500FF;
     --warning-text: #ffffff;
 }
@@ -104,10 +109,4 @@ div.h_subplate {
     background: var(--secundary);
     border-radius: 20px 0px 0px 20px;
     padding: 0 2%;
-}
-
-div.front {
-    z-index: 500;
-    margin: 0;
-    background: var(--main);
 }
