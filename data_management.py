@@ -30,7 +30,7 @@ def from_timestamp(stamp):
 
 def shift_timestamp(timestamp, minutes):
     dt = from_timestamp(timestamp)
-    dt += timedelta(minutes=minutes)
+    dt += timedelta(minutes=int(minutes))
     return to_timestamp(dt)
 
 
@@ -203,7 +203,7 @@ def get_current_event(location, *, prefab=False):
     event = df.iloc[index]
     if event["start"] < get_timestamp(add=-int(event["duration"])):
         return "Break", "Pleas wait for the next Event to start", "", None
-    return event["event"], event["description"], event["start"], event["duration"]
+    return event["event"], event["description"], event["start"], int(event["duration"])
 
 def get_next_event(location, *, prefab=False):
     if prefab:
@@ -222,7 +222,7 @@ def get_next_event(location, *, prefab=False):
     if index == len(df):
         return "", "", "", None
     event = df.iloc[index]
-    return event["event"], event["description"], event["start"], event["duration"]
+    return event["event"], event["description"], event["start"], int(event["duration"])
 
 def get_locations():
     return df_events["location"].unique().tolist()
