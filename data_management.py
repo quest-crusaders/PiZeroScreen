@@ -35,15 +35,16 @@ def shift_timestamp(timestamp, minutes):
 
 
 def __create_id():
-    key = "".join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(ID_LENGTH)])
+    keyset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    key = "".join([random.choice(keyset) for _ in range(ID_LENGTH)])
     count = 0
     if df_prefab is not None:
         while [id for id in df_prefab["id"]].__contains__(key):
-            key = "".join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(ID_LENGTH + (count//10))])
+            key = "".join([random.choice(keyset) for _ in range(ID_LENGTH + (count//10))])
             count += 1
     return key
 
-def load_data():
+def load_data(table_gen_len=50, table_gen_loc_count=6):
     global df_events, df_prefab
     config["admin"] = {"password": "password123", "trusted_ips": "127.0.0.1"}
     config["logging"] = {"level": "default", "log_logins": "True", "timestamp": "True"}
@@ -68,8 +69,7 @@ def load_data():
 
         with open("./data/config.ini", "w") as f:
             config.write(f)
-        print('\033[91m', "No config found! creating default.", '\033[0m')
-        exit(1)
+        return False
     lm.CONF = config["logging"]
 
     if os.path.exists("./data/events.csv"):
@@ -78,26 +78,27 @@ def load_data():
             if col not in df.columns:
                 print('\033[91m', "Timetable is missing a Data: no", col, "Colum found!", '\033[0m')
                 print('\033[91m', "Aborting Setup! Please fix or delete 'data/events.csv'!", '\033[0m')
-                exit(1)
+                exit(2)
         if not "id" in df.columns:
             df["id"] = pd.Series([__create_id() for _ in range(len(df))], index=df.index)
         df = df[["id"] + DATA_COLUMNS]
         df.sort_values(by="start", inplace=True)
         df.reset_index(drop=True, inplace=True)
     else:
-        sample_num = 50
+        sample_num = table_gen_len
         data = {
             "id": [__create_id() for _ in range(sample_num)],
             "event": ["Sample_"+str(i) for i in range(sample_num)],
             "description": ["Just an Example." for _ in range(sample_num)],
             "type": ["default" for _ in range(sample_num)],
-            "start": [get_timestamp(add=10*i) for i in range(sample_num)],
+            "start": [get_timestamp(add=(10*i)-5) for i in range(sample_num)],
             "duration": [30 for _ in range(sample_num)],
-            "location": ["["+"abcdefghijklmnopqrstuvwxyz"[i%6]+"]stage"+str(i%6) for i in range(sample_num)]
+            "location": ["["+"abcdefghijklmnopqrstuvwxyz"[i%table_gen_loc_count]+"]stage"+str(i%table_gen_loc_count) for i in range(sample_num)]
         }
         df = pd.DataFrame(data)
     df_events = df.copy()
     df_prefab = df.copy()
+    return True
 
 def post_update():
     global df_events, msg_of_the_day
@@ -192,14 +193,14 @@ def get_current_event(location, *, prefab=False):
     df = df.sort_values(by="start")
     df.reset_index(inplace=True)
     if len(df) == 0:
-        return "", "", "", None
+        return "", "", "", 0
     index = 0
     tstamp = get_timestamp()
     while index < len(df) and df.iloc[index]["start"] <= tstamp:
         index += 1
     index -= 1
     if index < 0:
-        return "", "", "", None
+        return "", "", "", 0
     event = df.iloc[index]
     if event["start"] < get_timestamp(add=-int(event["duration"])):
         return "Break", "Pleas wait for the next Event to start", "", None
@@ -214,13 +215,13 @@ def get_next_event(location, *, prefab=False):
     df = df.sort_values(by="start")
     df.reset_index(inplace=True)
     if len(df) == 0:
-        return "", "", "", None
+        return "", "", "", 0
     index = 0
     tstamp = get_timestamp()
     while index < len(df) and df.iloc[index]["start"] <= tstamp:
         index += 1
     if index == len(df):
-        return "", "", "", None
+        return "", "", "", 0
     event = df.iloc[index]
     return event["event"], event["description"], event["start"], int(event["duration"])
 
@@ -258,6 +259,6 @@ def add_event(name, description, type, start, duration, location):
     df_prefab = pd.concat([df_prefab, pd.DataFrame(data)])
     df_prefab.reindex()
     lm.log("Event added:", id, name, description, type, start, duration, location, msg_type=lm.LogType.DataUpdated)
+    return id
 
 
-load_data()

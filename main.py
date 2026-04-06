@@ -101,6 +101,9 @@ def data_update_loop():
 
 
 if __name__ == '__main__':
+    if not dm.load_data():
+        print('\033[91m', "No config found! creating default.", '\033[0m')
+        exit(1)
     admin_url = "http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port") + "/admin"
     lm.log("STARTED AT:", dm.get_timestamp(), msg_type=lm.LogType.SystemInfo)
     lm.log("Visit Admin Panel at:", admin_url, msg_type=lm.LogType.SystemInfo)
