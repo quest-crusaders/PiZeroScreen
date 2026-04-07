@@ -16,25 +16,50 @@ msg_of_the_day = ""
 
 
 def get_timestamp(*, add=0):
+    """
+    return current timestamp
+    :param add: minute offset from current time
+    :return: current time as timestamp String
+    """
     time = datetime.now() + timedelta(minutes=add)
     return time.strftime("%Y-%m-%d_%H:%M")
 
 def to_timestamp(time):
+    """
+    convert datetime Object to timestamp String
+    :param time: datetime Object to be converted
+    :return: timestamp String
+    """
     return time.strftime("%Y-%m-%d_%H:%M")
 
 def from_timestamp(stamp):
+    """
+    convert timestamp string to datetime Object
+    :param stamp: Timestamp String to be converted
+    :return: datetime Object
+    """
     date, time = stamp.split("_")
     year, month, day = date.split("-")
     hour, minute = time.split(":")
     return datetime(int(year), int(month), int(day), int(hour), int(minute))
 
 def shift_timestamp(timestamp, minutes):
+    """
+    shift timestamp string by given number of minutes
+    :param timestamp: timestamp String to be shifted
+    :param minutes: amount of minutes to be shifted
+    :return: timestamp String
+    """
     dt = from_timestamp(timestamp)
     dt += timedelta(minutes=int(minutes))
     return to_timestamp(dt)
 
 
 def __create_id():
+    """
+    create unique event id
+    :return: id String
+    """
     keyset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     key = "".join([random.choice(keyset) for _ in range(ID_LENGTH)])
     count = 0
@@ -45,6 +70,10 @@ def __create_id():
     return key
 
 def load_data(table_gen_len=50, table_gen_loc_count=6):
+    """
+    load data from Files or generate new Files if missing
+    :return:
+    """
     global df_events, df_prefab
     config["admin"] = {"password": "password123", "trusted_ips": "127.0.0.1"}
     config["logging"] = {"level": "default", "log_logins": "True", "timestamp": "True"}
@@ -119,14 +148,27 @@ def post_update():
 
 
 def check_login(pw):
+    """
+    check login credentials
+    :param pw: password
+    :return: Boolean: is login correct
+    """
     return config.get("admin", "password") == pw
 
 def reset_prefab():
+    """
+    reset prefab datatable
+    :return:
+    """
     global df_prefab
     df_prefab = df_events.copy()
     lm.log("Prefab reset", msg_type=lm.LogType.DataUpdated)
 
 def update_table():
+    """
+    update datatable from prefab table
+    :return:
+    """
     global df_events
     df_events = df_prefab.copy()
     lm.log("Database Updated from prefab", msg_type=lm.LogType.DataUpdated)
@@ -136,6 +178,12 @@ def update_table():
 
 
 def get_public_table_csv(time_filter=None, location_filter=None):
+    """
+    get datatable as csv
+    :param time_filter: "no_past"|"future_only"
+    :param location_filter: str: location_name must contain
+    :return: csv as str
+    """
     df = df_events.copy()
     df.sort_values(by="start", inplace=True)
     if location_filter is not None:
@@ -152,6 +200,12 @@ def get_public_table_csv(time_filter=None, location_filter=None):
     return df[DATA_COLUMNS].to_csv(index=False)
 
 def get_public_table_html(time_filter=None, location_filter=None):
+    """
+    get datatable as html table
+    :param time_filter: "no_past"|"future_only"
+    :param location_filter: str: location_name must contain
+    :return: html table as str
+    """
     df = df_events.copy()
     df.sort_values(by="start", inplace=True)
     if location_filter is not None:
@@ -185,6 +239,12 @@ def get_time_table(*, prefab=False, location: None|str=None):
 
 
 def get_current_event(location, *, prefab=False):
+    """
+    get current event data for location
+    :param location: str: location of event
+    :param prefab: bool: use prefab table
+    :return: (str, str, str, int): (Name, Description, Start, Duration(minutes))
+    """
     if prefab:
         df = df_prefab
     else:
@@ -207,6 +267,12 @@ def get_current_event(location, *, prefab=False):
     return event["event"], event["description"], event["start"], int(event["duration"])
 
 def get_next_event(location, *, prefab=False):
+    """
+    get data of next Event for location
+    :param location: str: location of event
+    :param prefab: bool: use prefab table
+    :return: (str, str, str, int): (Name, Description, Start, Duration(minutes))
+    """
     if prefab:
         df = df_prefab
     else:
@@ -226,9 +292,24 @@ def get_next_event(location, *, prefab=False):
     return event["event"], event["description"], event["start"], int(event["duration"])
 
 def get_locations():
+    """
+    get all known locations
+    :return: list[str]: list of locations
+    """
     return df_events["location"].unique().tolist()
 
 def edit_event(id, name, description, type, start, duration, location):
+    """
+    edit event data by id
+    :param id: str: event id to edit
+    :param name: str: new event name
+    :param description: str: new event description
+    :param type: str: new event type
+    :param start: str: new event start should be timestamp
+    :param duration: int: new event duration in minutes
+    :param location: str: new event location
+    :return:
+    """
     if len(df_prefab.loc[df_prefab["id"] == id].index) == 0:
         lm.log("Event editing failed:", id, "not found!", msg_type=lm.LogType.DataUpdated)
         return
@@ -237,6 +318,11 @@ def edit_event(id, name, description, type, start, duration, location):
     lm.log("Event edited:", id, name, description, type, start, duration, location, msg_type=lm.LogType.DataUpdated)
 
 def delete_event(id):
+    """
+    delete event by id
+    :param id: str: event id to delete
+    :return:
+    """
     try:
         index = df_prefab.loc[df_prefab["id"] == id].index[0]
         df_prefab.drop(index, inplace=True)
@@ -245,6 +331,16 @@ def delete_event(id):
         lm.log("Event deleting failed:", id, "not found!", msg_type=lm.LogType.DataUpdated)
 
 def add_event(name, description, type, start, duration, location):
+    """
+    add new event
+    :param name: str: event name
+    :param description: str: event description
+    :param type: str: event type
+    :param start: str: event start should be timestamp
+    :param duration: int: event duration in minutes
+    :param location: str: event location
+    :return: str: new event id
+    """
     global df_prefab
     id = __create_id()
     data = {
