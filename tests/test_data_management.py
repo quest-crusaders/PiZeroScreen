@@ -11,6 +11,10 @@ import logging_manager as lm
 class TestDMTyping(unittest.TestCase):
 
     def setUp(self):
+        try:
+            os.mkdir("./data")
+        except FileExistsError:
+            pass
         cmd = ["mv", "./data", "./data_bk"]
         subprocess.call(cmd)
         import data_management as dm
@@ -81,6 +85,10 @@ class TestDMTyping(unittest.TestCase):
 class TestDMFunction(unittest.TestCase):
 
     def setUp(self):
+        try:
+            os.mkdir("./data")
+        except FileExistsError:
+            pass
         cmd = ["mv", "./data", "./data_bk"]
         subprocess.call(cmd)
         import data_management as dm

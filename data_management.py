@@ -87,14 +87,6 @@ def load_data(table_gen_len=50, table_gen_loc_count=6):
             os.mkdir("./data")
         except FileExistsError:
             pass
-        try:
-            os.mkdir("./static")
-        except FileExistsError:
-            pass
-        try:
-            os.mkdir("./fonts")
-        except FileExistsError:
-            pass
 
         with open("./data/config.ini", "w") as f:
             config.write(f)

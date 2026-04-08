@@ -4,6 +4,7 @@ import asyncio
 import json
 from time import sleep
 from threading import Thread
+import os
 
 import data_management as dm
 import http_handler as hh
@@ -13,6 +14,21 @@ import logging_manager as lm
 import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+# Ensure subfolder exist
+try:
+    os.mkdir("./data")
+except FileExistsError:
+    pass
+try:
+    os.mkdir("./static")
+except FileExistsError:
+    pass
+try:
+    os.mkdir("./fonts")
+except FileExistsError:
+    pass
 
 
 async def loop_graper(request):
