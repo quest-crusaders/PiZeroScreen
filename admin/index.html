@@ -36,14 +36,14 @@
         }
     }
 </script>
-<div class="centered">
+<div class="centered" style="position: absolute; width: 100%;top: 4em">
     <label>only show: </label>
     <input type="text" placeholder="keep empty for all locations" id="loc_filter">
     <input type="button" value="Filter" onclick="pass_filter();filter();">
 </div>
 
 <table style="width: 100%;">
-    <tr><th>active Timetable:</th><th>edited Timetable:</th></tr>
+    <tr style="height: 2em"><th>active Timetable:</th><th>edited Timetable:</th></tr>
     <tr>
         <td>
             <iframe src="/admin/time_table" style="width: 97%;height: 60vh;"></iframe>
@@ -59,27 +59,26 @@
         <td>
             <div>
                 <form action="/admin/edit_event" method="post">
+                    <input type="text" name="id" id="id" style="display: none;">
                     <input type="text" name="filter" class="filter" hidden="hidden">
                     <table>
                         <tr>
-                            <td>ID</td>
                             <td>Event</td>
                             <td>Description</td>
                             <td>Type</td>
                             <td>Start</td>
                             <td>Length</td>
-                            <td>Ort</td>
+                            <td>Location</td>
                             <td></td>
                         </tr>
                         <tr>
-                            <td><input type="text" name="id" id="id"></td>
-                            <td><input type="text" minlength="3" name="event" id="event"></td>
-                            <td><input type="text" name="description" id="desc"></td>
-                            <td><input type="text" name="type" id="type"></td>
-                            <td><input type="datetime-local" name="start" id="start"></td>
-                            <td><input type="number" min="1" name="duration" id="duration"></td>
-                            <td><input type="text" min="3" name="location" id="loc"></td>
-                            <td><input type="submit" value="Update"></td>
+                            <td><input type="text" minlength="3" name="event" id="event" class="event"></td>
+                            <td><input type="text" name="description" id="desc" class="desc"></td>
+                            <td><input type="text" name="type" id="type" class="type"></td>
+                            <td><input type="datetime-local" name="start" id="start" class="start"></td>
+                            <td><input type="number" min="1" name="duration" id="duration" class="duration"></td>
+                            <td><input type="text" min="3" name="location" id="loc" class="location"></td>
+                            <td><input type="submit" value="Update" class="btn"></td>
                         </tr>
                     </table>
                 </form>
@@ -94,17 +93,17 @@
                             <td>Type</td>
                             <td>Start</td>
                             <td>Length</td>
-                            <td>Ort</td>
+                            <td>Location</td>
                             <td></td>
                         </tr>
                         <tr>
-                            <td><input type="text" minlength="3" name="event"></td>
-                            <td><input type="text" name="description"></td>
-                            <td><input type="text" name="type"></td>
-                            <td><input type="datetime-local" name="start"></td>
-                            <td><input type="number" min="1" name="duration"></td>
-                            <td><input type="text" minlength="3" name="location"></td>
-                            <td><input type="submit" value="Add"></td>
+                            <td><input type="text" minlength="3" name="event" class="event"></td>
+                            <td><input type="text" name="description" class="desc"></td>
+                            <td><input type="text" name="type" class="type"></td>
+                            <td><input type="datetime-local" name="start" class="start"></td>
+                            <td><input type="number" min="1" name="duration" class="duration"></td>
+                            <td><input type="text" min="3" name="location" class="location"></td>
+                            <td><input type="submit" value="Add" class="btn"></td>
                         </tr>
                     </table>
                 </form>
@@ -128,12 +127,12 @@
         <td>
             <div>
                 <form action="/admin/reset_table" method="post">
-                    <input type="submit" value="revert all changes">
+                    <input type="submit" value="revert all changes" class="btn" style="height: 10vh">
                 </form>
             </div>
             <div>
                 <form action="/admin/submit_table" method="post">
-                    <input type="submit" value="commit all changes">
+                    <input type="submit" value="commit all changes" class="btn" style="height: 10vh">
                 </form>
             </div>
         </td>
