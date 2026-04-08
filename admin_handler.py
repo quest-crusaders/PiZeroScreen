@@ -49,7 +49,7 @@ def raise_404(file="File"):
 
 async def get_timetable(request):
     if not check_auth(request):
-        raise_404(request.path)
+        raise web.HTTPUnauthorized()
     prefab = request.rel_url.query.get('prefab') == "true"
     loc = request.rel_url.query.get('loc')
     if loc == "":

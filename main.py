@@ -4,6 +4,7 @@ import asyncio
 import json
 from time import sleep
 from threading import Thread
+import os
 
 import data_management as dm
 import http_handler as hh
@@ -13,6 +14,21 @@ import logging_manager as lm
 import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+# Ensure subfolder exist
+try:
+    os.mkdir("./data")
+except FileExistsError:
+    pass
+try:
+    os.mkdir("./static")
+except FileExistsError:
+    pass
+try:
+    os.mkdir("./fonts")
+except FileExistsError:
+    pass
 
 
 async def loop_graper(request):
@@ -101,6 +117,9 @@ def data_update_loop():
 
 
 if __name__ == '__main__':
+    if not dm.load_data():
+        print('\033[91m', "No config found! creating default.", '\033[0m')
+        exit(1)
     admin_url = "http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port") + "/admin"
     lm.log("STARTED AT:", dm.get_timestamp(), msg_type=lm.LogType.SystemInfo)
     lm.log("Visit Admin Panel at:", admin_url, msg_type=lm.LogType.SystemInfo)
