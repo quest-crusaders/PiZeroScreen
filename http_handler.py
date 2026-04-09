@@ -73,6 +73,26 @@ def css(request):
     file = request.match_info.get('file', "custom")
     return web.Response(text=open("css/"+file+".css").read(), content_type='text/css')
 
+def icon(request):
+    icon = open("favicon.ico", "br").read()
+    return web.Response(body=icon, content_type='image/x-icon')
+
+def get_table(request):
+    file_type = request.path.split(".")[-1]
+    query = request.rel_url.query
+    time_filter = query.get("time")
+    if time_filter not in ["no_past", "future_only"]:
+        time_filter = None
+    location_filter = query.get("location")
+    table_getter = {
+        "html": (dm.get_public_table_html, 'text/html'),
+        "csv": (dm.get_public_table_csv, 'text/csv'),
+    }
+    table = table_getter.get(file_type, None)
+    if table is None:
+        raise web.HTTPNotFound()
+    else :
+        return web.Response(text=table[0](time_filter=time_filter, location_filter=location_filter), content_type=table[1])
 
 def get_table(request):
     file_type = request.path.split(".")[-1]
