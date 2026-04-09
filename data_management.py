@@ -6,6 +6,7 @@ from configparser import ConfigParser
 import random
 import requests
 import logging_manager as lm
+import numpy
 
 ID_LENGTH = 8
 DATA_COLUMNS = ["event", "description", "type", "start", "duration", "location"]
@@ -69,6 +70,21 @@ def __create_id():
             count += 1
     return key
 
+def __check_data(df):
+    expected_cols = DATA_COLUMNS
+    for col in expected_cols:
+        if col not in df.columns:
+            return (False, "Timetable is missing Data: no " + col + " Colum found!")
+    if len(df) == 0:
+        df["duration"] = pd.to_numeric(df["duration"], downcast='integer')
+        return (True, "Timetable is missing Data: no Events found!")
+    if df.duration.dtype != numpy.dtype('int64'):
+        return (False, "Timetable has invalid Data: duration Column must be int only!")
+    for C in df.columns:
+        if C not in expected_cols:
+            return (True, "Timetable has invalid Data: extra Column " + C + " found!")
+    return (True, "")
+
 def load_data(table_gen_len=50, table_gen_loc_count=6):
     """
     load data from Files or generate new Files if missing
@@ -95,11 +111,11 @@ def load_data(table_gen_len=50, table_gen_loc_count=6):
 
     if os.path.exists("./data/events.csv"):
         df = pd.read_csv("./data/events.csv")
-        for col in DATA_COLUMNS:
-            if col not in df.columns:
-                print('\033[91m', "Timetable is missing a Data: no", col, "Colum found!", '\033[0m')
-                print('\033[91m', "Aborting Setup! Please fix or delete 'data/events.csv'!", '\033[0m')
-                exit(2)
+        data_valid, reason = __check_data(df)
+        if reason != "":
+            lm.log(reason, msg_type=lm.LogType.Error)
+        if not data_valid:
+            exit(2)
         if not "id" in df.columns:
             df["id"] = pd.Series([__create_id() for _ in range(len(df))], index=df.index)
         df = df[["id"] + DATA_COLUMNS]

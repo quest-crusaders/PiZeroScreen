@@ -1,6 +1,7 @@
 body {
     background-color: #333;
     color: white;
+    min-width: 160vh;
 }
 
 ul {
@@ -123,6 +124,34 @@ input {
 
 td {
     min-width: 70px;
-    max-width: 30vw;
-    overflow: clip;
+    max-width: 70vw;
+}
+
+input.btn{
+    width: min-content;
+    min-width: 95%
+}
+
+input.duration{
+    width: 4em;
+}
+
+input.desc{
+    width: 20vw;
+}
+
+input.location{
+    width: 7.5vw;
+}
+
+input.type{
+    width: 7.5vw;
+}
+
+input.start{
+    width: min-content;
+}
+
+input.event{
+    width: 15vw;
 }
