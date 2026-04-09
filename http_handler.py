@@ -73,6 +73,9 @@ def css(request):
     file = request.match_info.get('file', "custom")
     return web.Response(text=open("css/"+file+".css").read(), content_type='text/css')
 
+def icon(request):
+    icon = open("favicon.ico", "br").read()
+    return web.Response(body=icon, content_type='image/x-icon')
 
 def get_table(request):
     file_type = request.path.split(".")[-1]

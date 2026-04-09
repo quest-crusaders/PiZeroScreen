@@ -41,6 +41,7 @@ LOOP = None
 app = web.Application()
 app.add_routes([
                 web.get('/', loop_graper),
+                web.get('/favicon.ico', hh.icon),
                 web.get('/{file}.css', hh.css),
                 web.static('/fonts/', './fonts/'),
                 web.static('/js/', './js/'),
