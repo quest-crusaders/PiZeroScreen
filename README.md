@@ -1,4 +1,4 @@
-#PiZeroScreen
+# PiZeroScreen
 
 This Python3 Software is ment to control multiple Info-Screens.
 Each Screen itself being plugged into a Raspberry PiZero2W with a browser as Frontend.
@@ -38,11 +38,11 @@ Recommended:
   nano ./data/config.ini
   ```
 
-After that you can start the Software with:
-```
-source ./venv/bin/activate
-python main.py
-```
+- After that you can start the Software with:
+  ```
+  source ./venv/bin/activate
+  python main.py
+  ```
 
 **Configuration**
 -
@@ -75,5 +75,5 @@ The Config-Block can set the URL at witch to post, as well as the id-String to p
 ```
 [post_api]
 id = test
-url = your url
+url = https://example.com/update/<secret>
 ```

@@ -1,6 +1,7 @@
 body {
     background-color: #333;
     color: white;
+    min-width: 160vh;
 }
 
 ul {
@@ -30,12 +31,56 @@ li a:hover {
     margin: 0;
 }
 
-.filter {
-    display: none;
+a.preview {
+    color: #478fff;
 }
 
 .active {
     background-color: #004;
+}
+
+.filter {
+    display: none;
+}
+
+.inv {
+    display: none;
+}
+
+.log {
+    padding: 5px;
+    border-radius: 5px;
+    margin: 3px;
+}
+
+.SystemInfo {
+    background-color: #550e9c;
+}
+.Login {
+    background-color: #8c5029;
+}
+.ScreenLogin {
+    background-color: #022e75;
+}
+.ScreenInfoUpdated {
+    background-color: #036c00;
+}
+.Error{
+    background-color: #800000;
+}
+.DataUpdated{
+    background-color: #66750a;
+}
+.DEFAULT{
+    background-color: #555555;
+}
+
+div.log div.log_msg {
+    background-color: #191919;
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 3px;
+    width: auto;
 }
 
 div.centered {
@@ -79,6 +124,34 @@ input {
 
 td {
     min-width: 70px;
-    max-width: 30vw;
-    overflow: clip;
+    max-width: 70vw;
+}
+
+input.btn{
+    width: min-content;
+    min-width: 95%
+}
+
+input.duration{
+    width: 4em;
+}
+
+input.desc{
+    width: 20vw;
+}
+
+input.location{
+    width: 7.5vw;
+}
+
+input.type{
+    width: 7.5vw;
+}
+
+input.start{
+    width: min-content;
+}
+
+input.event{
+    width: 15vw;
 }

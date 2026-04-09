@@ -8,6 +8,7 @@ import os
 
 import data_management as dm
 import http_handler as hh
+import logging_manager as lm
 
 SESSION_KEY_LENGTH = 64
 
@@ -22,6 +23,21 @@ def __create_session_key():
     return key
 
 def check_auth(request):
+    ip = ""
+    try:
+        ip = request.headers["X-Forwarded-For"]
+    except KeyError:
+        ip = request.remote
+    ip_is_trusted = False
+    if ip == "127.0.0.1":
+        ip_is_trusted = True
+    else:
+        for t_ip in dm.config.get("admin", "trusted_ips").split(","):
+            if ip.startswith(t_ip):
+                ip_is_trusted = True
+                break
+    if not ip_is_trusted:
+        return False
     if request.cookies.get("session") is None:
         return False
     if sessions.__contains__(request.cookies.get("session")):
@@ -33,7 +49,7 @@ def raise_404(file="File"):
 
 async def get_timetable(request):
     if not check_auth(request):
-        raise_404(request.path)
+        raise web.HTTPUnauthorized()
     prefab = request.rel_url.query.get('prefab') == "true"
     loc = request.rel_url.query.get('loc')
     if loc == "":
@@ -67,6 +83,7 @@ async def get_timetable(request):
                     str += '"' + col + '",'
                 }
                 str = str.substring(0, str.length - 1);
+                str = str.replaceAll("'", "&#39;")
                 row.children[0].innerHTML = "<button onclick='edit("+str+");'>EDIT</button>";
             }
         </script>
@@ -125,7 +142,9 @@ async def get_screens(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
     layouts = [l for l in hh.layouts.keys()]
+    layouts.sort()
     locations = dm.get_locations()
+    locations.sort()
     screens = [s for s in hh.layout_map.keys()]
 
     def make_layout_opt(selected):
@@ -139,15 +158,43 @@ async def get_screens(request):
     for S in screens:
         html += "<tr><td>" + S + "</td>"
         html += "<td><select name='"+S+"_layout' value='"+hh.layout_map.get(S)+"'>"+make_layout_opt(hh.layout_map.get(S))+"</select></td>"
-        html += "<td><select name='"+S+"_location' value='"+hh.location_map.get(S)+"'>"+make_location_opt(hh.location_map.get(S))+"</select></td>"
+        html += "<td>"
+        for Sli in range(hh.layout_conf.get(hh.layout_map.get(S, "default")).locations):
+            suffix = ""
+            if Sli > 0:
+                suffix = f"_{Sli}"
+            loc = "default"
+            if Sli < len(hh.location_map.get(S)):
+                loc = hh.location_map.get(S)[Sli]
+            html += "<select name='"+S+"_location"+suffix+"' value='"+loc+"'>"+make_location_opt(loc)+"</select>"
+        html += "</td>"
+        html += "<td><a class='preview' href='/?mac="+S+"&preview=true' target='_blank'>preview "+S+"</a></td>"
         html += "</tr>\n"
     html += "</table>\n<label>force Update </label><input type='checkbox' name='force'><br><input type='submit' value='commit changes'></form>\n"
+    html += "<form action='/admin/purge_screens' method='post'><input type='submit' value='remove disconnected'></form>\n"
     return web.Response(text=html, content_type='text/html')
+
+async def post_purge_screens(request):
+    if not check_auth(request):
+        return web.Response(text="Unauthorized", status=401, content_type="text/html")
+    lm.log("Removing disconnected screens", msg_type=lm.LogType.DataUpdated)
+    _ = await request.post()
+    all_screens = list(hh.layout_map.keys())
+    active_screens = [s for s in hh.layout_map.keys() if hh.layout_map.get(s) in hh.CLIENTS]
+    for S in all_screens:
+        if S not in active_screens:
+            hh.layout_map.pop(S)
+            hh.location_map.pop(S)
+    with open("./data/layouts.json", "w+") as f:
+        f.write(json.dumps(hh.layout_map))
+    with open("./data/locations.json", "w+") as f:
+        f.write(json.dumps(hh.location_map))
+    return web.HTTPFound("/admin/screens")
 
 async def post_screen_layout(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
-    print('\033[93m', "Updating Screen Layouts", '\033[0m')
+    lm.log("Updating Screen Layouts", msg_type=lm.LogType.ScreenInfoUpdated)
     data = await request.post()
     screens = [s for s in hh.layout_map.keys()]
     update = []
@@ -160,11 +207,20 @@ async def post_screen_layout(request):
                 await ws.send_str(json.dumps(my_data))
                 if not update.__contains__(ws):
                     update.append(ws)
-        if data[S+"_location"] != hh.location_map.get(S):
-            hh.location_map[S] = data[S+"_location"]
-            for ws in [ws for ws in hh.CLIENTS.keys() if hh.CLIENTS.get(ws) == S]:
-                 if not update.__contains__(ws):
-                     update.append(ws)
+        for Sli in range(hh.layout_conf.get(hh.layout_map.get(S, "default")).locations):
+            while len(hh.location_map.get(S)) <= Sli:
+                hh.location_map.get(S).append("default")
+            suffix = ""
+            if Sli > 0:
+                suffix = f"_{Sli}"
+            try:
+                if data[S+"_location"+suffix] != hh.location_map.get(S)[Sli]:
+                    hh.location_map[S][Sli] = data[S+"_location"+suffix]
+                    for ws in [ws for ws in hh.CLIENTS.keys() if hh.CLIENTS.get(ws) == S]:
+                         if not update.__contains__(ws):
+                             update.append(ws)
+            except KeyError:
+                pass
         for ws in update:
             await hh.send_data(ws)
     with open("./data/layouts.json", "w+") as f:
@@ -178,33 +234,86 @@ async def post_msg_of_the_day(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
     data = await request.post()
     dm.msg_of_the_day = data["msg"]
+    if dm.msg_of_the_day == " ":
+        dm.msg_of_the_day = ""
     return web.HTTPFound("/admin/messages.html")
 
 async def post_warning(request):
     if not check_auth(request):
         return web.Response(text="Unauthorized", status=401, content_type="text/html")
-    print('\033[93m', "Updating Screen Layouts", '\033[0m')
     data = await request.post()
+    lm.log("Showing Warning:", data["msg"], msg_type=lm.LogType.SystemInfo)
     html = open("Warning.html").read().replace("[MSG]", data["msg"])
     my_data = {"id": "body", "html": html}
     for ws in hh.CLIENTS.keys():
         await ws.send_str(json.dumps(my_data))
     return web.HTTPFound("/admin/messages.html")
 
+async def get_logs(request):
+    if not check_auth(request):
+        return web.Response(text="Unauthorized", status=401, content_type="text/html")
+    logs = lm.MESSAGE_LOG.copy()
+    html = '<!DOCTYPE html><html lang="en">\n<head>\n<meta charset="UTF-8">\n<link rel="stylesheet" href="/ui.css"></head>\n<body>\n'
+    html += """
+    <script>
+    function filter(mclass) {
+        elems = document.getElementsByClassName(mclass);
+        for (var i = 0; i < elems.length; i++) {
+            if (elems[i].tagName == "DIV"){
+                if (document.getElementById(mclass).checked) {
+                    elems[i].classList.remove("inv");
+                }else {
+                    elems[i].classList.add("inv");
+                }
+            }
+        }
+    }
+    </script>
+    """
+    for mtype in lm.LogType:
+        mclass = str(mtype)[8:]
+        checked = ""
+        if mtype in lm.LOGGING_LEVELS.get("admin_panel"):
+            checked = " checked"
+        html += f"<label class='log {mclass}'>{mclass}<input type='checkbox' id='{mclass}'{checked} onchange='filter(\"{mclass}\");'></label>\n"
+    html += "<br><br>"
+    html += "\n".join(["<div class='log "+str(mtype)[8:]+"'>"+t+" <div class='log_msg'>"+msg.replace("\n", "<br>")+"</div></div>" for t, msg, mtype in logs])
+    html += "<script>\n"
+    for mtype in lm.LogType:
+        mclass = str(mtype)[8:]
+        html += f"filter('{mclass}');\n"
+    html += "</script>"
+    html += "</body></html>"
+    return web.Response(text=html, content_type='text/html')
+
 async def login(request):
     query = await request.post()
     pw = query.get("pw")
-    ret = query.get("return")
-    if ret is None:
-        ret = "/admin/index.html"
-    elif ret == "":
-        ret = "/admin/index.html"
+    ret = "/admin/index.html"
 
-    ip = request.remote
+    ip = ""
+    try:
+        ip = request.headers["X-Forwarded-For"]
+    except KeyError:
+        ip = request.remote
+    ip_is_trusted = False
+    if ip == "127.0.0.1":
+        ip_is_trusted = True
+    else:
+        for t_ip in dm.config.get("admin", "trusted_ips").split(","):
+            if ip.startswith(t_ip):
+                ip_is_trusted = True
+                break
+    if not ip_is_trusted:
+        lm.log("IP blocked (not in Whitelist) login from", ip, msg_type=lm.LogType.Login)
+        resp = web.Response(text="IP address is not trusted!", status=401, content_type="text/html")
+        resp.cookies["session"] = ""
+        return resp
     if sus_ips.get(ip) is not None:
         count, tstamp = sus_ips.get(ip)
         t = min((3**max(0, count-2))-1, 60) - (datetime.now().timestamp() - tstamp)
         if t > 0:
+            lm.log("IP blocked (too many trys) login from", ip, msg_type=lm.LogType.Login)
             resp = web.Response(text="To many login requests, try later", status=429, content_type="text/html")
             resp.cookies["session"] = ""
             return resp
@@ -219,8 +328,10 @@ async def login(request):
         cookie = __create_session_key()
         resp.cookies["session"] = cookie
         sessions.append(cookie)
+        lm.log("Successfull login from", ip, msg_type=lm.LogType.Login)
         return resp
     else:
+        lm.log("Failed login from", ip, msg_type=lm.LogType.Login)
         resp = web.Response(text="Wrong Password!", status=401, content_type="text/html")
         resp.cookies["session"] = ""
         return resp
@@ -233,6 +344,12 @@ async def logout(request):
         sessions.remove(cookie)
     except ValueError:
         pass
+    ip = ""
+    try:
+        ip = request.headers["X-Forwarded-For"]
+    except KeyError:
+        ip = request.remote
+    lm.log("logout from", ip, msg_type=lm.LogType.Login)
     return resp
 
 def get_login(request):

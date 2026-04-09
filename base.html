@@ -4,19 +4,27 @@
     <meta charset="UTF-8">
     <title>RPi0_Screen</title>
     <link rel="stylesheet" href="/custom.css">
+    <meta name="viewport" content="width=device-width"/>
 </head>
 <body id="body">
 
 </body>
 <script>
 const urlParams = new URLSearchParams(window.location.search);
-const myMAC = urlParams.get('mac');
+var myMAC = urlParams.get('mac');
+var debug = urlParams.get('preview') === "true"
+if (debug) {
+    myMAC += ":preview"
+}
 
 // Create WebSocket connection.
 let socket = null
 
 function init(socket) {socket.send(myMAC);}
 function receive(event) {
+    if (debug) {
+        console.log(event.data);
+    }
     const data = JSON.parse(event.data);
 
     let elem = null;
@@ -41,27 +49,35 @@ function connect() {
 }
 
 function nodeScriptReplace(node) {
-        if ( nodeScriptIs(node) === true ) {
-                node.parentNode.replaceChild( nodeScriptClone(node) , node );
+    if ( nodeScriptIs(node) === true ) {
+        if (node.innerText !== "") {
+            console.log("script failed security check: no inline js\n");
+            return;
         }
-        else {
-                var i = -1, children = node.childNodes;
-                while ( ++i < children.length ) {
-                      nodeScriptReplace( children[i] );
-                }
+        if (!node.src.startsWith(document.location.origin+"/js/")) {
+            console.log("script failed security check: forbidden source\n"+node.src);
+            return;
         }
+        node.parentNode.replaceChild( nodeScriptClone(node) , node );
+    }
+    else {
+        var i = -1, children = node.childNodes;
+        while ( ++i < children.length ) {
+            nodeScriptReplace( children[i] );
+        }
+    }
 
-        return node;
+    return node;
 }
 function nodeScriptClone(node){
-        var script  = document.createElement("script");
-        script.text = node.innerHTML;
+    var script  = document.createElement("script");
+    script.text = node.innerHTML;
 
-        var i = -1, attrs = node.attributes, attr;
-        while ( ++i < attrs.length ) {
-              script.setAttribute( (attr = attrs[i]).name, attr.value );
-        }
-        return script;
+    var i = -1, attrs = node.attributes, attr;
+    while ( ++i < attrs.length ) {
+          script.setAttribute( (attr = attrs[i]).name, attr.value );
+    }
+    return script;
 }
 
 function nodeScriptIs(node) {

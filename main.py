@@ -4,14 +4,31 @@ import asyncio
 import json
 from time import sleep
 from threading import Thread
+import os
 
 import data_management as dm
 import http_handler as hh
 import admin_handler as ah
+import logging_manager as lm
 
 import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+# Ensure subfolder exist
+try:
+    os.mkdir("./data")
+except FileExistsError:
+    pass
+try:
+    os.mkdir("./static")
+except FileExistsError:
+    pass
+try:
+    os.mkdir("./fonts")
+except FileExistsError:
+    pass
 
 
 async def loop_graper(request):
@@ -26,8 +43,12 @@ app.add_routes([
                 web.get('/', loop_graper),
                 web.get('/{file}.css', hh.css),
                 web.static('/fonts/', './fonts/'),
+                web.static('/js/', './js/'),
                 web.static('/static/', './static/'),
                 web.get('/ws', hh.websocket_handler),
+
+                web.get('/timetable.html', hh.get_table),
+                web.get('/timetable.csv', hh.get_table),
 
                 web.post("/login", ah.login),
                 web.post("/admin/add_event", ah.post_add_entry),
@@ -38,6 +59,8 @@ app.add_routes([
                 web.post("/admin/screens", ah.post_screen_layout),
                 web.post("/admin/warning", ah.post_warning),
                 web.post("/admin/msg_of_the_day", ah.post_msg_of_the_day),
+                web.post("/admin/purge_screens", ah.post_purge_screens),
+                web.get("/admin/logs", ah.get_logs),
                 web.get("/admin/screens", ah.get_screens),
                 web.get("/admin", ah.get_login),
                 web.get("/admin/logout", ah.logout),
@@ -57,12 +80,12 @@ def data_update_loop():
         next_events[L] = dm.get_next_event(L)
     while True:
         loop_count += 1
-        sleep(1)
+        sleep(30)
         if LOOP is None:
             requests.get("http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port"))
             continue
         if msg_of_the_day != dm.msg_of_the_day:
-            print('\033[93m', "Updating Screens Message", '\033[0m')
+            lm.log("Updating Screens Message", msg_type=lm.LogType.ScreenInfoUpdated)
             msg_of_the_day = dm.msg_of_the_day
             my_data = {"id": "msg_of_the_day", "html": msg_of_the_day}
             for ws in hh.CLIENTS:
@@ -77,7 +100,7 @@ def data_update_loop():
                 for ws in hh.CLIENTS:
                     if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
                         continue
-                    if not update.__contains__(ws):
+                    if not ws in update and not ws in hh.preview_list:
                         update.append(ws)
             if next_event != dm.get_next_event(L):
                 next_event = dm.get_next_event(L)
@@ -85,19 +108,22 @@ def data_update_loop():
                 for ws in hh.CLIENTS:
                     if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
                         continue
-                    if not update.__contains__(ws):
+                    if not ws in update and not ws in hh.preview_list:
                         update.append(ws)
             if len(update) > 0:
-                print('\033[93m', "Updating Screens at", L, '\033[0m')
+                lm.log("Updating Screens at", L, msg_type=lm.LogType.ScreenInfoUpdated)
             for ws in update:
                 asyncio.run_coroutine_threadsafe(hh.send_data(ws), LOOP)
 
 
 if __name__ == '__main__':
+    if not dm.load_data():
+        print('\033[91m', "No config found! creating default.", '\033[0m')
+        exit(1)
     admin_url = "http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port") + "/admin"
-    print('\033[95m', "STARTED AT:", dm.get_timestamp(), '\033[0m')
-    print('\033[95m', "Visit Admin Panel at:", admin_url, '\033[0m')
+    lm.log("STARTED AT:", dm.get_timestamp(), msg_type=lm.LogType.SystemInfo)
+    lm.log("Visit Admin Panel at:", admin_url, msg_type=lm.LogType.SystemInfo)
     update_thread = Thread(target=data_update_loop)
     update_thread.daemon = True
     update_thread.start()
-    web.run_app(app, port=int(dm.config.get("server", "port")), host=dm.config.get("server", "host"))
+    web.run_app(app, port=int(dm.config.get("server", "port")), host=dm.config.get("server", "host"),print="")

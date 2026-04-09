@@ -1,4 +1,7 @@
 .venv
+venv
+*.log
+*.auth
 *.ini
 *.json
 *.csv
