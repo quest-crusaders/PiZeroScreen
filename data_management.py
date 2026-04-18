@@ -271,7 +271,7 @@ def get_current_event(location, *, prefab=False):
         return "", "", "", 0
     event = df.iloc[index]
     if event["start"] < get_timestamp(add=-int(event["duration"])):
-        return "Break", "Pleas wait for the next Event to start", "", None
+        return "Break", "Pleas wait for the next Event to start", "", 0
     return event["event"], event["description"], event["start"], int(event["duration"])
 
 def get_next_event(location, *, prefab=False):
