@@ -125,7 +125,7 @@ async def send_data(ws):
 
         if conf.current_event:
             event, desc, start_str, duration = dm.get_current_event(loc, prefab=preview)
-            if duration != 0:
+            if duration != -1:
                 my_data = {"id": "event_name"+suffix, "html": event}
                 await ws.send_str(json.dumps(my_data))
                 my_data = {"id": "event_desc"+suffix, "html": desc}
@@ -138,7 +138,7 @@ async def send_data(ws):
                 await ws.send_str(json.dumps(my_data))
         if conf.next_event:
             event, desc, start_str, duration = dm.get_next_event(loc, prefab=preview)
-            if duration != 0:
+            if duration != -1:
                 my_data = {"id": "event_next_name"+suffix, "html": event}
                 await ws.send_str(json.dumps(my_data))
                 my_data = {"id": "event_next_desc"+suffix, "html": desc}
