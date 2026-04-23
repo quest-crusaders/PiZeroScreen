@@ -12,14 +12,16 @@ class LayoutConfig(object):
     next_event: bool
     locations: int
     msg_otd: bool
+    table: bool
 
-    def __init__(self, current_event= True, next_event=True, locations=1, msg_otd=True):
+    def __init__(self, current_event= True, next_event=True, locations=1, msg_otd=True, table=False):
         if locations <= 0:
             raise ValueError("location Count must be positive!")
         self.current_event = current_event
         self.next_event = next_event
         self.locations = locations
         self.msg_otd = msg_otd
+        self.table = table
 
 def layout_conf_reader(line: str) -> LayoutConfig:
     if not (line.startswith("<!-- LayoutConfig: ") and line.endswith(" -->")):
@@ -32,6 +34,7 @@ def layout_conf_reader(line: str) -> LayoutConfig:
     conf.current_event = "current_event" in parameter
     conf.next_event = "next_event" in parameter
     conf.msg_otd = "msg_otd" in parameter
+    conf.table = "timetable" in parameter
 
     # check other parameter
     for P in parameter:
@@ -153,6 +156,22 @@ async def send_data(ws):
         await ws.send_str(json.dumps(my_data))
     if conf.msg_otd:
         my_data = {"id": "msg_of_the_day", "html": dm.msg_of_the_day}
+        await ws.send_str(json.dumps(my_data))
+    if conf.table:
+        def table_filter(df):
+            def mod(event):
+                today = event["start"].startswith(dm.get_timestamp().split("_")[0])
+                tomorrow = event["start"].startswith(dm.get_timestamp(add=60*24).split("_")[0])
+                event["show"] = today or tomorrow
+                if event["show"]:
+                    event["start"] = '<b style="font-size: 130%">'+ event["start"].split("_")[-1] +'</b>'
+                return event
+            df = df.apply(mod, axis=1)
+            df = df[df["show"] == True]
+            return df[["event", "description", "start"]]
+        locs = location_map.get(CLIENTS.get(ws))[:conf.locations]
+        html = dm.get_public_table_html("future_only", locs, table_filter)
+        my_data = {"id": "timetable", "html": html}
         await ws.send_str(json.dumps(my_data))
 
 async def websocket_handler(request):
