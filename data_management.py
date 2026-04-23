@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from configparser import ConfigParser
 import random
 import requests
+from attr.filters import exclude
+
 import logging_manager as lm
 import numpy
 
@@ -186,7 +188,7 @@ def update_table():
     post_update()
 
 
-def get_public_table_csv(time_filter=None, location_filter=None):
+def get_public_table_csv(time_filter=None, location_filter=None, post_filter=lambda x: x):
     """
     get datatable as csv
     :param time_filter: "no_past"|"future_only"
@@ -195,8 +197,14 @@ def get_public_table_csv(time_filter=None, location_filter=None):
     """
     df = df_events.copy()
     df.sort_values(by="start", inplace=True)
-    if location_filter is not None:
+    if type(location_filter) is str:
         df = df[df["location"].str.contains(location_filter)]
+    elif type(location_filter) is list:
+        def filter(event):
+            event["is_loc"] = event["location"] in location_filter
+            return event
+        df = df.apply(filter, axis=1)
+        df = df[df["is_loc"] == True]
     if time_filter is not None:
         if time_filter == "no_past":
             def filter(event):
@@ -206,9 +214,9 @@ def get_public_table_csv(time_filter=None, location_filter=None):
             df = df[df["is_active"] == True]
         if time_filter == "future_only":
             df = df[df["start"] >= get_timestamp()]
-    return df[DATA_COLUMNS].to_csv(index=False)
+    return post_filter(df[DATA_COLUMNS]).to_html(index=False)
 
-def get_public_table_html(time_filter=None, location_filter=None):
+def get_public_table_html(time_filter=None, location_filter=None, post_filter=lambda x: x):
     """
     get datatable as html table
     :param time_filter: "no_past"|"future_only"
@@ -217,8 +225,14 @@ def get_public_table_html(time_filter=None, location_filter=None):
     """
     df = df_events.copy()
     df.sort_values(by="start", inplace=True)
-    if location_filter is not None:
+    if type(location_filter) is str:
         df = df[df["location"].str.contains(location_filter)]
+    elif type(location_filter) is list:
+        def filter(event):
+            event["is_loc"] = event["location"] in location_filter
+            return event
+        df = df.apply(filter, axis=1)
+        df = df[df["is_loc"] == True]
     if time_filter is not None:
         if time_filter == "no_past":
             def filter(event):
@@ -228,7 +242,7 @@ def get_public_table_html(time_filter=None, location_filter=None):
             df = df[df["is_active"] == True]
         if time_filter == "future_only":
             df = df[df["start"] >= get_timestamp()]
-    return df[DATA_COLUMNS].to_html(index=False)
+    return post_filter(df[DATA_COLUMNS]).to_html(index=False, justify="center", border=False, escape=False)
 
 
 def get_time_table(*, prefab=False, location: None|str=None):
