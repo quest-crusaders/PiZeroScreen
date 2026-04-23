@@ -95,6 +95,7 @@ def load_data(table_gen_len=50, table_gen_loc_count=6):
     config["logging"] = {"level": "default", "log_logins": "True", "timestamp": "True"}
     config["server"] = {"host": "127.0.0.1", "port": "8080"}
     config["post_api"] = {"id": "test", "url": ""}
+    config["break_msg"] = {"name": "Break", "desc": "Pleas wait for the next Event to start"}
 
     if os.path.exists("./data/config.ini"):
         config.read("./data/config.ini")
@@ -261,17 +262,20 @@ def get_current_event(location, *, prefab=False):
     df = df.sort_values(by="start")
     df.reset_index(inplace=True)
     if len(df) == 0:
-        return "", "", "", 0
+        return "", "", "", -1
     index = 0
     tstamp = get_timestamp()
     while index < len(df) and df.iloc[index]["start"] <= tstamp:
         index += 1
     index -= 1
     if index < 0:
-        return "", "", "", 0
+        return "", "", "", -1
     event = df.iloc[index]
     if event["start"] < get_timestamp(add=-int(event["duration"])):
-        return "Break", "Pleas wait for the next Event to start", "", 0
+        next = df.iloc[index+1]["start"]
+        break_start = shift_timestamp(event["start"], event["duration"])
+        break_len = (from_timestamp(next) - from_timestamp(break_start)).total_seconds()//60
+        return config["break_msg"]["name"], config["break_msg"]["desc"], break_start, break_len
     return event["event"], event["description"], event["start"], int(event["duration"])
 
 def get_next_event(location, *, prefab=False):
@@ -289,13 +293,13 @@ def get_next_event(location, *, prefab=False):
     df = df.sort_values(by="start")
     df.reset_index(inplace=True)
     if len(df) == 0:
-        return "", "", "", 0
+        return "", "", "", -1
     index = 0
     tstamp = get_timestamp()
     while index < len(df) and df.iloc[index]["start"] <= tstamp:
         index += 1
     if index == len(df):
-        return "", "", "", 0
+        return "", "", "", -1
     event = df.iloc[index]
     return event["event"], event["description"], event["start"], int(event["duration"])
 
