@@ -5,28 +5,7 @@ import os
 import requests
 
 import data_management as dm
-
-
-class TestBench(object):
-
-    def __init__(self):
-        self.cmd = ["python", "./main.py"]
-
-    def run(self):
-        self.bench_proc = subprocess.Popen(self.cmd)
-
-    def check(self, timeout):
-        try:
-            return self.bench_proc.wait(timeout)
-        except subprocess.TimeoutExpired:
-            return None
-
-    def cleanup(self):
-        self.bench_proc.terminate()
-        self.bench_proc.wait()
-
-
-
+from tests.testbench import TestBench
 
 
 class TestStartup(unittest.TestCase):

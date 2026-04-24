@@ -31,7 +31,7 @@ except FileExistsError:
     pass
 
 
-async def loop_graper(request):
+async def loop_grabber(request):
     global LOOP
     LOOP = asyncio.get_running_loop()
     return hh.index(request)
@@ -40,7 +40,7 @@ async def loop_graper(request):
 LOOP = None
 app = web.Application()
 app.add_routes([
-                web.get('/', loop_graper),
+                web.get('/', loop_grabber), # loop_grabber returns hh.index()
                 web.get('/favicon.ico', hh.icon),
                 web.get('/{file}.css', hh.css),
                 web.static('/fonts/', './fonts/'),
@@ -83,6 +83,8 @@ def data_update_loop():
         loop_count += 1
         sleep(30)
         if LOOP is None:
+            if loop_count > 1: # its only unexpected to not be set after the first run
+                lm.log("async_loop not set!", lm.LogType.Error)
             requests.get("http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port"))
             continue
         if msg_of_the_day != dm.msg_of_the_day:

@@ -172,9 +172,12 @@ async def websocket_handler(request):
                     preview_list.append(ws)
                 CLIENTS[ws] = screen_id
                 if location_map.get(screen_id) is None:
-                    location_map[screen_id] = ["default"]
+                    location_map[screen_id] = dm.get_locations()
                 if layout_map.get(screen_id) is None:
-                    layout_map[screen_id] = "default"
+                    if screen_id in layouts:
+                        layout_map[screen_id] = screen_id
+                    else:
+                        layout_map[screen_id] = "default"
                 lm.log("adding screen:", msg.data, msg_type=lm.LogType.ScreenLogin)
                 html = layouts.get(layout_map.get(screen_id, "default"))
                 my_data = {"id": "body", "html": html}
