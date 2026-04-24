@@ -91,10 +91,11 @@ def data_update_loop():
             my_data = {"id": "msg_of_the_day", "html": msg_of_the_day}
             for ws in hh.CLIENTS:
                 asyncio.run_coroutine_threadsafe(ws.send_str(json.dumps(my_data)), LOOP)
+        update = []
         for L in dm.get_locations():
+            uc = len(update)
             current_event = current_events.get(L)
             next_event = next_events.get(L)
-            update = []
             if current_event != dm.get_current_event(L):
                 current_event = dm.get_current_event(L)
                 current_events[L] = current_event
@@ -109,10 +110,10 @@ def data_update_loop():
                     if L in hh.location_map.get(hh.CLIENTS.get(ws)):
                         if not ws in update and not ws in hh.preview_list:
                             update.append(ws)
-            if len(update) > 0:
+            if len(update) > uc:
                 lm.log("Updating Screens at", L, msg_type=lm.LogType.ScreenInfoUpdated)
-            for ws in update:
-                asyncio.run_coroutine_threadsafe(hh.send_data(ws), LOOP)
+        for ws in update:
+            asyncio.run_coroutine_threadsafe(hh.send_data(ws), LOOP)
 
 
 if __name__ == '__main__':
