@@ -31,7 +31,7 @@ except FileExistsError:
     pass
 
 
-async def loop_graper(request):
+async def loop_grabber(request):
     global LOOP
     LOOP = asyncio.get_running_loop()
     return hh.index(request)
@@ -40,7 +40,7 @@ async def loop_graper(request):
 LOOP = None
 app = web.Application()
 app.add_routes([
-                web.get('/', loop_graper),
+                web.get('/', loop_grabber), # loop_grabber returns hh.index()
                 web.get('/favicon.ico', hh.icon),
                 web.get('/{file}.css', hh.css),
                 web.static('/fonts/', './fonts/'),
@@ -83,6 +83,8 @@ def data_update_loop():
         loop_count += 1
         sleep(30)
         if LOOP is None:
+            if loop_count > 1: # its only unexpected to not be set after the first run
+                lm.log("async_loop not set!", lm.LogType.Error)
             requests.get("http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port"))
             continue
         if msg_of_the_day != dm.msg_of_the_day:
@@ -91,30 +93,29 @@ def data_update_loop():
             my_data = {"id": "msg_of_the_day", "html": msg_of_the_day}
             for ws in hh.CLIENTS:
                 asyncio.run_coroutine_threadsafe(ws.send_str(json.dumps(my_data)), LOOP)
+        update = []
         for L in dm.get_locations():
+            uc = len(update)
             current_event = current_events.get(L)
             next_event = next_events.get(L)
-            update = []
             if current_event != dm.get_current_event(L):
                 current_event = dm.get_current_event(L)
                 current_events[L] = current_event
                 for ws in hh.CLIENTS:
-                    if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
-                        continue
-                    if not ws in update and not ws in hh.preview_list:
-                        update.append(ws)
+                    if L in hh.location_map.get(hh.CLIENTS.get(ws)):
+                        if not ws in update and not ws in hh.preview_list:
+                            update.append(ws)
             if next_event != dm.get_next_event(L):
                 next_event = dm.get_next_event(L)
                 next_events[L] = next_event
                 for ws in hh.CLIENTS:
-                    if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
-                        continue
-                    if not ws in update and not ws in hh.preview_list:
-                        update.append(ws)
-            if len(update) > 0:
+                    if L in hh.location_map.get(hh.CLIENTS.get(ws)):
+                        if not ws in update and not ws in hh.preview_list:
+                            update.append(ws)
+            if len(update) > uc:
                 lm.log("Updating Screens at", L, msg_type=lm.LogType.ScreenInfoUpdated)
-            for ws in update:
-                asyncio.run_coroutine_threadsafe(hh.send_data(ws), LOOP)
+        for ws in update:
+            asyncio.run_coroutine_threadsafe(hh.send_data(ws), LOOP)
 
 
 if __name__ == '__main__':

@@ -269,12 +269,15 @@ def get_current_event(location, *, prefab=False):
         index += 1
     index -= 1
     if index < 0:
-        return "", "", "", -1
+        next = df.iloc[index+1]["start"]
+        break_start = get_timestamp()[:-5]+"00:00"
+        break_len = int((from_timestamp(next) - from_timestamp(break_start)).total_seconds()//60)
+        return config["break_msg"]["name"], config["break_msg"]["desc"], break_start, break_len
     event = df.iloc[index]
     if event["start"] < get_timestamp(add=-int(event["duration"])):
         next = df.iloc[index+1]["start"]
         break_start = shift_timestamp(event["start"], event["duration"])
-        break_len = (from_timestamp(next) - from_timestamp(break_start)).total_seconds()//60
+        break_len = int((from_timestamp(next) - from_timestamp(break_start)).total_seconds()//60)
         return config["break_msg"]["name"], config["break_msg"]["desc"], break_start, break_len
     return event["event"], event["description"], event["start"], int(event["duration"])
 
