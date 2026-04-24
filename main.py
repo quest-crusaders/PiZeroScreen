@@ -99,18 +99,16 @@ def data_update_loop():
                 current_event = dm.get_current_event(L)
                 current_events[L] = current_event
                 for ws in hh.CLIENTS:
-                    if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
-                        continue
-                    if not ws in update and not ws in hh.preview_list:
-                        update.append(ws)
+                    if L in hh.location_map.get(hh.CLIENTS.get(ws)):
+                        if not ws in update and not ws in hh.preview_list:
+                            update.append(ws)
             if next_event != dm.get_next_event(L):
                 next_event = dm.get_next_event(L)
                 next_events[L] = next_event
                 for ws in hh.CLIENTS:
-                    if hh.location_map.get(hh.CLIENTS.get(ws)) != L:
-                        continue
-                    if not ws in update and not ws in hh.preview_list:
-                        update.append(ws)
+                    if L in hh.location_map.get(hh.CLIENTS.get(ws)):
+                        if not ws in update and not ws in hh.preview_list:
+                            update.append(ws)
             if len(update) > 0:
                 lm.log("Updating Screens at", L, msg_type=lm.LogType.ScreenInfoUpdated)
             for ws in update:
