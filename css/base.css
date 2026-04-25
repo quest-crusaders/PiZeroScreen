@@ -1,8 +1,8 @@
 :root {
-    --main: #eac88a;
-    --secundary: #ffffff;
-    --trim: #733102;
-    --text: #000000;
+    --main: #4d8aa6;
+    --secundary: #124241;
+    --trim: #1d262c;
+    --text: #ffffff;
     /*
     --main: #8b3d8f;
     --secundary: #eb5e9d;
@@ -15,7 +15,7 @@
 
 
 body {
-    background-color: black;
+    background-color: var(--main);
     color: var(--text);
     overflow: hidden;
     font-size: 150%;

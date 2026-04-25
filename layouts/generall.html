@@ -22,35 +22,4 @@
 <div class="msg_otd">
   <p id="msg_of_the_day" class="msg_otd"></p>
 </div>
-  <script>
-    var msg = document.getElementById("msg_of_the_day");
-    var offset = 0;
-    var is_scrolling = false;
-
-    var text_loop_len = 100;
-
-    setTimeout(loop, 1000);
-
-    function loop(){
-      setTimeout(loop, 20);
-      msg.innerText = msg.innerText.replaceAll("\n", " ");
-      let ref_width = msg.parentElement.offsetWidth;
-      if (is_scrolling){
-        if (msg.offsetWidth < ref_width){
-          offset = 0;
-          is_scrolling = false;
-          msg.style = "";
-        }else {
-          offset++;
-          if (offset > msg.offsetWidth){
-            offset = -(window.innerWidth);
-          }
-          msg.style = "transform: translate("+(-offset).toString()+"px, 0)";
-        }
-      }else {
-        if (msg.offsetWidth >= ref_width) {
-          is_scrolling = true;
-        }
-      }
-    }
-  </script>
+<script src="/js/motd_scroll.js"></script>
