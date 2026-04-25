@@ -8,3 +8,10 @@ venv
 *.tsv
 .idea
 __pycache__
+
+
+# ignore posibly trademarked or non-GPL layout content
+./static
+./fonts
+./css
+./layouts
