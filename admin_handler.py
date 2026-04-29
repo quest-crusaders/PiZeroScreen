@@ -54,7 +54,7 @@ async def get_timetable(request):
     loc = request.rel_url.query.get('loc')
     if loc == "":
         loc = None
-    html = '<!DOCTYPE html>\n<link rel="stylesheet" href="/ui.css">\n' + dm.get_time_table(prefab=prefab, location=loc)
+    html = '<!DOCTYPE html>\n<link rel="stylesheet" href="/ui.css">\n' + dm.get_event_table(prefab=prefab, location_filter=loc, columns=["id"]+dm.DATA_COLUMNS)
     if True:
         html += """
         <script>

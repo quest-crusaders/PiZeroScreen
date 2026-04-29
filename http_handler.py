@@ -22,6 +22,7 @@ class LayoutConfig(object):
         self.locations = locations
         self.msg_otd = msg_otd
         self.table = table
+        self.table_filter = None
 
 def layout_conf_reader(line: str) -> LayoutConfig:
     if not (line.startswith("<!-- LayoutConfig: ") and line.endswith(" -->")):
@@ -40,6 +41,8 @@ def layout_conf_reader(line: str) -> LayoutConfig:
     for P in parameter:
         if P.startswith("locations="):
             conf.locations = int(P[10:])
+        elif P.startswith("table_filter="):
+            conf.table_filter = P[13:]
 
     return conf
 
@@ -87,32 +90,11 @@ def get_table(request):
     if time_filter not in ["no_past", "future_only"]:
         time_filter = None
     location_filter = query.get("location")
-    table_getter = {
-        "html": (dm.get_public_table_html, 'text/html'),
-        "csv": (dm.get_public_table_csv, 'text/csv'),
-    }
-    table = table_getter.get(file_type, None)
+    table = dm.get_event_table(file_type, time_filter=time_filter, location_filter=location_filter)
     if table is None:
         raise web.HTTPNotFound()
     else :
-        return web.Response(text=table[0](time_filter=time_filter, location_filter=location_filter), content_type=table[1])
-
-def get_table(request):
-    file_type = request.path.split(".")[-1]
-    query = request.rel_url.query
-    time_filter = query.get("time")
-    if time_filter not in ["no_past", "future_only"]:
-        time_filter = None
-    location_filter = query.get("location")
-    table_getter = {
-        "html": (dm.get_public_table_html, 'text/html'),
-        "csv": (dm.get_public_table_csv, 'text/csv'),
-    }
-    table = table_getter.get(file_type, None)
-    if table is None:
-        raise web.HTTPNotFound()
-    else :
-        return web.Response(text=table[0](time_filter=time_filter, location_filter=location_filter), content_type=table[1])
+        return web.Response(text=table, content_type=table[1])
 
 async def send_data(ws):
     preview = ws in preview_list
@@ -158,19 +140,38 @@ async def send_data(ws):
         my_data = {"id": "msg_of_the_day", "html": dm.msg_of_the_day}
         await ws.send_str(json.dumps(my_data))
     if conf.table:
-        def table_filter(df):
+        def coming(df):
             def mod(event):
+                event["end"] = dm.shift_timestamp(event["start"], event["duration"])
                 today = event["start"].startswith(dm.get_timestamp().split("_")[0])
                 tomorrow = event["start"].startswith(dm.get_timestamp(add=60*24).split("_")[0])
-                event["show"] = today or tomorrow
+                event["show"] = True#today or tomorrow
                 if event["show"]:
                     event["start"] = '<b style="font-size: 130%">'+ event["start"].split("_")[-1] +'</b>'
+                    event["end"] = '<b style="font-size: 130%">'+ event["end"].split("_")[-1] +'</b>'
                 return event
             df = df.apply(mod, axis=1)
             df = df[df["show"] == True]
-            return df[["event", "description", "start"]]
-        locs = location_map.get(CLIENTS.get(ws))[:conf.locations]
-        html = dm.get_public_table_html("future_only", locs, table_filter)
+            return df
+        if conf.locations == 0:
+            locs = None
+        else:
+            locs = location_map.get(CLIENTS.get(ws))[:conf.locations]
+        tf = None
+        pf = lambda x: x
+        cols = ["event", "description", "start"]
+        if conf.table_filter == "no_past":
+            tf = "no_past"
+        elif conf.table_filter == "future_only":
+            tf = "future_only"
+        elif conf.table_filter == "coming":
+            tf = "future_only"
+            pf = coming
+        elif conf.table_filter == "overview":
+            tf = "no_past"
+            pf = coming
+            cols.append("end")
+        html = dm.get_event_table("html", time_filter=tf, location_filter=locs, post_filter=pf, columns=cols)
         my_data = {"id": "timetable", "html": html}
         await ws.send_str(json.dumps(my_data))
 

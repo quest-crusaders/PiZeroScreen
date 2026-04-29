@@ -52,14 +52,8 @@ class TestDMTyping(unittest.TestCase):
         self.assertEqual(bool, type(self.dm.check_login("password123")))
         self.assertEqual(bool, type(self.dm.check_login("abc")))
 
-    def test_get_public_table_csv(self):
-        self.assertEqual(str, type(self.dm.get_public_table_csv()))
-
-    def test_get_public_table_html(self):
-        self.assertEqual(str, type(self.dm.get_public_table_html()))
-
-    def test_get_time_table(self):
-        self.assertEqual(str, type(self.dm.get_time_table()))
+    def test_get_public_table(self):
+        self.assertEqual(str, type(self.dm.get_event_table()))
 
     def test_get_current_event(self):
         ev, desc, start, dur = self.dm.get_current_event("[a]stage0")

@@ -188,77 +188,51 @@ def update_table():
     post_update()
 
 
-def get_public_table_csv(time_filter=None, location_filter=None, post_filter=lambda x: x):
-    """
-    get datatable as csv
-    :param time_filter: "no_past"|"future_only"
-    :param location_filter: str: location_name must contain
-    :return: csv as str
-    """
-    df = df_events.copy()
-    df.sort_values(by="start", inplace=True)
-    if type(location_filter) is str:
-        df = df[df["location"].str.contains(location_filter)]
-    elif type(location_filter) is list:
-        def filter(event):
-            event["is_loc"] = event["location"] in location_filter
-            return event
-        df = df.apply(filter, axis=1)
-        df = df[df["is_loc"] == True]
-    if time_filter is not None:
-        if time_filter == "no_past":
-            def filter(event):
-                event["is_active"] = to_timestamp(from_timestamp(event["start"]) + timedelta(minutes=int(event["duration"]))) >= get_timestamp()
-                return event
-            df = df.apply(filter, axis=1)
-            df = df[df["is_active"] == True]
-        if time_filter == "future_only":
-            df = df[df["start"] >= get_timestamp()]
-    return post_filter(df[DATA_COLUMNS]).to_html(index=False)
-
-def get_public_table_html(time_filter=None, location_filter=None, post_filter=lambda x: x):
+def get_event_table(output="html", *, prefab=False, time_filter=None, location_filter=None, post_filter=lambda x: x, columns=DATA_COLUMNS):
     """
     get datatable as html table
+    :param output: "html"|"csv": select output format
+    :param prefab: bool: if prefab table should be used
     :param time_filter: "no_past"|"future_only"
-    :param location_filter: str: location_name must contain
-    :return: html table as str
+    :param location_filter: str|[str]: location_name must contain
+    :param post_filter: function(DataFrame) -> Dataframe: function to run over before outputting
+    :param columns: list of column names
+    :return: html or csv table as str
     """
-    df = df_events.copy()
-    df.sort_values(by="start", inplace=True)
-    if type(location_filter) is str:
-        df = df[df["location"].str.contains(location_filter)]
-    elif type(location_filter) is list:
-        def filter(event):
-            event["is_loc"] = event["location"] in location_filter
-            return event
-        df = df.apply(filter, axis=1)
-        df = df[df["is_loc"] == True]
-    if time_filter is not None:
-        if time_filter == "no_past":
-            def filter(event):
-                event["is_active"] = to_timestamp(from_timestamp(event["start"]) + timedelta(minutes=int(event["duration"]))) >= get_timestamp()
-                return event
-            df = df.apply(filter, axis=1)
-            df = df[df["is_active"] == True]
-        if time_filter == "future_only":
-            df = df[df["start"] >= get_timestamp()]
-    return post_filter(df[DATA_COLUMNS]).to_html(index=False, justify="center", border=False, escape=False)
-
-
-def get_time_table(*, prefab=False, location: None|str=None):
-    def filter(event):
-        event["filter"] = event["location"].lower().__contains__(location.lower())
-        return event
     if prefab:
         df = df_prefab.copy()
     else:
         df = df_events.copy()
-    if location is not None:
-        df = df.apply(filter, axis=1)
-        df = df[df["filter"] == True]
-    df = df[["id"]+DATA_COLUMNS]
     df.sort_values(by="start", inplace=True)
-    return df.to_html(index=False)
+    if type(location_filter) is str:
+        def filter(event):
+            event["is_loc"] = event["location"].__contains__(location_filter) or event["location"] == "all"
+            return event
+        df = df.apply(filter, axis=1)
+        df = df[df["is_loc"] == True]
+    elif type(location_filter) is list:
+        def filter(event):
+            event["is_loc"] = event["location"] == "all" or event["location"] in location_filter
+            return event
+        df = df.apply(filter, axis=1)
+        df = df[df["is_loc"] == True]
+    if time_filter is not None:
+        if time_filter == "no_past":
+            def filter(event):
+                event["is_active"] = to_timestamp(from_timestamp(event["start"]) + timedelta(minutes=int(event["duration"]))) >= get_timestamp()
+                return event
+            df = df.apply(filter, axis=1)
+            df = df[df["is_active"] == True]
+        if time_filter == "future_only":
+            df = df[df["start"] >= get_timestamp()]
+    df = post_filter(df)
+    df = df[columns]
+    if output == "html":
+        return df.to_html(index=False, justify="center", border=False, escape=False)
+    elif output == "csv":
+        return df.to_csv(index=False)
+    else:
+        return None
 
 
 def get_current_event(location, *, prefab=False):
@@ -272,7 +246,11 @@ def get_current_event(location, *, prefab=False):
         df = df_prefab
     else:
         df = df_events
-    df = df[df["location"] == location]
+    def filter(event):
+        event["is_loc"] = event["location"] == location or event["location"] == "all"
+        return event
+    df = df.apply(filter, axis=1)
+    df = df[df["is_loc"] == True]
     df = df.sort_values(by="start")
     df.reset_index(inplace=True)
     if len(df) == 0:
@@ -306,7 +284,11 @@ def get_next_event(location, *, prefab=False):
         df = df_prefab
     else:
         df = df_events
-    df = df[df["location"] == location]
+    def filter(event):
+        event["is_loc"] = event["location"] == location or event["location"] == "all"
+        return event
+    df = df.apply(filter, axis=1)
+    df = df[df["is_loc"] == True]
     df = df.sort_values(by="start")
     df.reset_index(inplace=True)
     if len(df) == 0:

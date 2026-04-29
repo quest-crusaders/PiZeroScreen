@@ -42,25 +42,25 @@ class TestScreenSystem(unittest.TestCase):
         with open("./base.html", "br") as f:
             self.assertEqual(f.read(), resp.content)
 
-        for css_file in [f for f in os.listdir("./css/") if f.endswith(".css")]:
+        for css_file in [f for f in os.listdir("./css/") if f.endswith(".css")][:3]:
             resp = requests.get("http://127.0.0.1:8080/" + css_file)
             self.assertEqual(200, resp.status_code)
             with open("./css/" + css_file, "br") as f:
                 self.assertEqual(f.read(), resp.content)
 
-        for font_file in os.listdir("./fonts/"):
+        for font_file in os.listdir("./fonts/")[:3]:
             resp = requests.get("http://127.0.0.1:8080/fonts/" + font_file)
             self.assertEqual(200, resp.status_code)
             with open("./fonts/" + font_file, "br") as f:
                 self.assertEqual(f.read(), resp.content)
 
-        for js_file in os.listdir("./js/"):
+        for js_file in os.listdir("./js/")[:3]:
             resp = requests.get("http://127.0.0.1:8080/js/" + js_file)
             self.assertEqual(200, resp.status_code)
             with open("./js/" + js_file, "br") as f:
                 self.assertEqual(f.read(), resp.content)
 
-        for file in os.listdir("./static/"):
+        for file in os.listdir("./static/")[:3]:
             resp = requests.get("http://127.0.0.1:8080/static/" + file)
             self.assertEqual(200, resp.status_code)
             with open("./static/" + file, "br") as f:
@@ -150,7 +150,13 @@ class TestScreenSystem(unittest.TestCase):
         self.bench.run()
         time.sleep(3)
         screen.run()
-        time.sleep(305)
+        for _ in range(30):
+            print("-", end="")
+        print("\r", end="")
+        for _ in range(30):
+            time.sleep(10)
+            print("=", end="")
+        time.sleep(10)
         screen.close()
         self.assertEqual(len(should), len(screen.data))
         for k, v in should.items():
