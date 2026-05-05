@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from configparser import ConfigParser
 import random
 import requests
-from attr.filters import exclude
+import re
 
 import logging_manager as lm
 import numpy
@@ -16,6 +16,7 @@ config = ConfigParser()
 df_events: pd.DataFrame = None
 df_prefab: pd.DataFrame = None
 msg_of_the_day = ""
+loc_prefix = re.compile("\\A\\[[a-zA-Z0-9]+\\]")
 
 
 def get_timestamp(*, add=0):
@@ -188,7 +189,7 @@ def update_table():
     post_update()
 
 
-def get_event_table(output="html", *, prefab=False, time_filter=None, location_filter=None, post_filter=lambda x: x, columns=DATA_COLUMNS):
+def get_event_table(output="html", *, prefab=False, time_filter=None, location_filter=None, post_filter=lambda x: x, columns=DATA_COLUMNS, keep_loc_prefix=False):
     """
     get datatable as html table
     :param output: "html"|"csv": select output format
@@ -225,6 +226,10 @@ def get_event_table(output="html", *, prefab=False, time_filter=None, location_f
             df = df[df["is_active"] == True]
         if time_filter == "future_only":
             df = df[df["start"] >= get_timestamp()]
+    def rm_loc_prefix(event):
+        event["location"] = loc_prefix.sub("", event["location"])
+        return event
+    df = df.apply(rm_loc_prefix, axis=1)
     df = post_filter(df)
     df = df[columns]
     if output == "html":

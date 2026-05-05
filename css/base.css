@@ -19,6 +19,7 @@ body {
     color: var(--text);
     overflow: hidden;
     font-size: 150%;
+    user-select:none;
 }
 
 h1 {

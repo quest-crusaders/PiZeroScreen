@@ -11,10 +11,6 @@ import http_handler as hh
 import admin_handler as ah
 import logging_manager as lm
 
-import warnings
-
-warnings.simplefilter(action='ignore', category=FutureWarning)
-
 
 # Ensure subfolder exist
 try:

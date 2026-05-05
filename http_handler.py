@@ -145,7 +145,7 @@ async def send_data(ws):
                 event["end"] = dm.shift_timestamp(event["start"], event["duration"])
                 today = event["start"].startswith(dm.get_timestamp().split("_")[0])
                 tomorrow = event["start"].startswith(dm.get_timestamp(add=60*24).split("_")[0])
-                event["show"] = True#today or tomorrow
+                event["show"] = today or (tomorrow and (dm.get_timestamp()[-5:] > event["start"][-5:]))
                 if event["show"]:
                     event["start"] = '<b style="font-size: 130%">'+ event["start"].split("_")[-1] +'</b>'
                     event["end"] = '<b style="font-size: 130%">'+ event["end"].split("_")[-1] +'</b>'
@@ -170,7 +170,7 @@ async def send_data(ws):
         elif conf.table_filter == "overview":
             tf = "no_past"
             pf = coming
-            cols.append("end")
+            cols += ["end", "location"]
         html = dm.get_event_table("html", time_filter=tf, location_filter=locs, post_filter=pf, columns=cols)
         my_data = {"id": "timetable", "html": html}
         await ws.send_str(json.dumps(my_data))
