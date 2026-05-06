@@ -20,6 +20,7 @@ Following is a set of ids and the Data there Tags will be filled with.
 | event_desc       | Description of the current Event at Screen location     |
 | event_start      | Starting Time of the current Event at Screen location   |
 | event_len        | Length in min of the current Event at Screen location   |
+| event_end        | Ending Time of the current Event at Screen location     |
 | event_next_name  | Name of the next Event at Screen location               |
 | event_next_desc  | Description of the next Event at Screen location        |
 | event_next_start | Starting Time of the next Event at Screen location      |
