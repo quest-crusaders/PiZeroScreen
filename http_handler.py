@@ -167,6 +167,10 @@ async def send_data(ws):
         elif conf.table_filter == "coming":
             tf = "future_only"
             pf = coming
+        elif conf.table_filter == "coming_all":
+            tf = "future_only"
+            pf = coming
+            cols += ["location"]
         elif conf.table_filter == "overview":
             tf = "no_past"
             pf = coming
