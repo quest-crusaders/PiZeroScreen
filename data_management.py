@@ -229,7 +229,8 @@ def get_event_table(output="html", *, prefab=False, time_filter=None, location_f
     def rm_loc_prefix(event):
         event["location"] = loc_prefix.sub("", event["location"])
         return event
-    df = df.apply(rm_loc_prefix, axis=1)
+    if not keep_loc_prefix:
+        df = df.apply(rm_loc_prefix, axis=1)
     df = post_filter(df)
     df = df[columns]
     if output == "html":
