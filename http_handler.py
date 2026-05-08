@@ -171,6 +171,7 @@ async def send_data(ws):
             tf = "future_only"
             pf = coming
             cols += ["location"]
+            locs = dm.get_locations()
         elif conf.table_filter == "overview":
             tf = "no_past"
             pf = coming
