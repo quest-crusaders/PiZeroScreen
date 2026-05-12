@@ -1,3 +1,4 @@
+import socket
 import requests
 from aiohttp import web
 import asyncio
@@ -5,16 +6,16 @@ import json
 from time import sleep
 from threading import Thread
 import os
+import subprocess
+import re
 
 import data_management as dm
 import http_handler as hh
 import admin_handler as ah
 import logging_manager as lm
 
-import warnings
 
-warnings.simplefilter(action='ignore', category=FutureWarning)
-
+regex_ip = re.compile("(?<=inet )[12]?[0-9][0-9]?\\.[12]?[0-9][0-9]?\\.[12]?[0-9][0-9]?\\.[12]?[0-9][0-9]?(?=/)")
 
 # Ensure subfolder exist
 try:
@@ -29,6 +30,23 @@ try:
     os.mkdir("./fonts")
 except FileExistsError:
     pass
+
+
+def get_ip():
+    s = str(subprocess.check_output("ip address show wlan0", shell=True))
+    start, end = regex_ip.search(s).span()
+    return s[start:end]
+
+
+def udp_server_discovery():
+    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_socket.bind(("255.255.255.255", 2000))
+    while True:
+        msg, addr = udp_socket.recvfrom(1024)
+        if msg == b'pi0screen':
+            bstr = ("http://" + get_ip() + ":" + dm.config.get("server", "port")).encode("utf-8")
+            udp_socket.sendto(bstr, addr)
+            lm.log("Server Discover from:", addr, msg_type=lm.LogType.SystemInfo)
 
 
 async def loop_grabber(request):
@@ -125,6 +143,9 @@ if __name__ == '__main__':
     admin_url = "http://" + dm.config.get("server", "host") + ":" + dm.config.get("server", "port") + "/admin"
     lm.log("STARTED AT:", dm.get_timestamp(), msg_type=lm.LogType.SystemInfo)
     lm.log("Visit Admin Panel at:", admin_url, msg_type=lm.LogType.SystemInfo)
+    discovery_thread = Thread(target=udp_server_discovery)
+    discovery_thread.daemon = True
+    discovery_thread.start()
     update_thread = Thread(target=data_update_loop)
     update_thread.daemon = True
     update_thread.start()

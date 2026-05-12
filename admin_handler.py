@@ -54,12 +54,13 @@ async def get_timetable(request):
     loc = request.rel_url.query.get('loc')
     if loc == "":
         loc = None
-    html = '<!DOCTYPE html>\n<link rel="stylesheet" href="/ui.css">\n' + dm.get_time_table(prefab=prefab, location=loc)
+    html = '<!DOCTYPE html>\n<link rel="stylesheet" href="/ui.css">\n' + dm.get_event_table(prefab=prefab, location_filter=loc, columns=["id"]+dm.DATA_COLUMNS)
     if True:
         html += """
         <script>
             function edit(id, name, desc, type, start, duration, loc) {
                 parent.document.getElementById("id").value = id;
+                parent.document.getElementById("id_del").value = id;
                 parent.document.getElementById("event").value = name;
                 parent.document.getElementById("desc").value = desc;
                 parent.document.getElementById("type").value = type;
@@ -80,11 +81,12 @@ async def get_timetable(request):
                 }
                 let str = "";
                 for (const col of data) {
-                    str += '"' + col + '",'
+                    str += '"' + col + '",';
                 }
                 str = str.substring(0, str.length - 1);
-                str = str.replaceAll("'", "&#39;")
-                row.children[0].innerHTML = "<button onclick='edit("+str+");'>EDIT</button>";
+                str = str.replaceAll("'", "&#39;");
+                id = row.children[0].innerText;
+                row.children[0].innerHTML = "<button onclick='edit("+str+");' style='cursor:pointer;' title='"+id+"'>EDIT</button>";
             }
         </script>
         """

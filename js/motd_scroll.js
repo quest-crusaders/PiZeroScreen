@@ -8,12 +8,11 @@ if (side_panel != null) {
 var offset = 0;
 var is_scrolling = false;
 
-var text_loop_len = 100;
 
 setTimeout(loop, 1000);
 
 function loop(){
-    setTimeout(loop, 20);
+    setTimeout(loop, 40);
     msg.innerText = msg.innerText.replaceAll("\n", " ");
     let ref_width = msg.parentElement.parentElement.offsetWidth-(2*sp_width)-100;
     if (is_scrolling){
