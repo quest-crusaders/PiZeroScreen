@@ -2,6 +2,30 @@ var end_elem = document.getElementById("event_end");
 var start_elem = document.getElementById("event_next_start");
 var display_end_elem = document.getElementById("timer_end");
 var display_start_elem = document.getElementById("timer_start");
+var display_clock_elem = document.getElementById("clock");
+
+function clock_loop() {
+    setTimeout(clock_loop, 5000);
+
+    var now = new Date();
+    let h = now.getHours();
+    let m = now.getMinutes();
+
+
+    let display = "";
+
+    if (h < 10) {
+        display = "0";
+    }
+    display += h;
+    display += ":";
+    if (m < 10) {
+        display += "0";
+    }
+    display += m;
+
+    display_clock_elem.innerText = display;
+}
 
 function countdown_end_loop() {
     setTimeout(countdown_end_loop, 1000);
@@ -76,4 +100,7 @@ if (display_end_elem) {
 }
 if (display_start_elem) {
     countdown_start_loop();
+}
+if (display_clock_elem) {
+    clock_loop();
 }
